@@ -19,7 +19,7 @@
 html{scrollbar-color:var(--line) var(--bg)}
 body{
   background:var(--bg); color:var(--text); font-family:var(--term); font-size:20px;
-  min-height:100vh; overflow-x:hidden;
+  min-height:100vh; overflow-x:hidden; position:relative;
   background-image:
     radial-gradient(ellipse 90% 46% at 50% -8%, #1d1636 0%, transparent 62%),
     repeating-linear-gradient(0deg, transparent 0 47px, rgba(157,141,241,.045) 47px 48px),
@@ -54,10 +54,9 @@ h1{
 .tagline b{color:var(--text)}
 .headblock{margin-top:12px; font-size:18px; color:var(--muted); letter-spacing:.06em}
 .headblock span{color:var(--violet)}
-/* floating pixel loot */
-.floater{position:absolute; opacity:.5; pointer-events:none; z-index:1; animation:floaty 5.5s steps(6) infinite}
-.floater.f2{animation-duration:7s; animation-delay:-2s}
-.floater.f3{animation-duration:6.2s; animation-delay:-4s}
+/* background loot scatter */
+#bgScatter{position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+#bgScatter img{image-rendering:pixelated}
 @keyframes floaty{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
 
 main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display:flex; flex-direction:column; gap:26px; align-items:center; position:relative; z-index:2}
@@ -74,7 +73,6 @@ main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display
 .panel::after{bottom:-4px; right:-4px}
 .cast{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:10px; min-width:150px}
 .cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite}
-.cast img.pet{width:56px; animation:bob .9s steps(2) infinite; animation-delay:-.4s}
 @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
 .bubble{
   position:relative; background:#0a0813; border:3px solid var(--line); padding:10px 12px;
@@ -101,9 +99,14 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .btn-ghost:hover{color:var(--text)}
 .chips{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
 .scope{display:flex; gap:8px; flex-wrap:wrap}
-.scope-btn{font-family:var(--px); font-size:9px; padding:10px 12px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.04em}
+.scope-btn{font-family:var(--px); font-size:10px; padding:11px 14px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.05em}
 .scope-btn.on{background:var(--gold); color:#1a1408; border-color:#000; box-shadow:3px 3px 0 #6b5410}
 .scope-btn:active{transform:none}
+.scope-ic{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.9}
+.chip-ic{width:16px; height:16px; image-rendering:pixelated; vertical-align:-3px; margin-right:7px}
+.stat{position:relative}
+.stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
+.hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
 .chips .lbl{color:var(--muted); font-size:17px}
 .chip{
   font-family:var(--term); font-size:18px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -169,6 +172,7 @@ footer a{color:var(--violet); text-decoration:none}
 footer a:hover{text-decoration:underline}
 footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 .hidden{display:none !important}
+[hidden]{display:none !important}
 @media (max-width:640px){
   .panel{flex-direction:column}
   .cast{flex-direction:row; justify-content:center; min-width:0}
@@ -181,6 +185,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 </style>
 </head>
 <body>
+<div id="bgScatter" aria-hidden="true"></div>
 
 <div class="marquee"><div class="track" id="mq">
 <span>★ PROOF OF GREED</span><i>◆</i><span>RAW CHAIN LOGS · NO LOGIN · NO SERVER</span><i>◆</i><span>THE MAZE ALWAYS EATS ITS SHARE</span><i>◆</i><span>SIR JACKALOT IS WATCHING YOUR NET</span><i>◆</i><span>PRINT YOUR RECEIPT</span><i>◆</i>
@@ -188,9 +193,6 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 </div></div>
 
 <header>
-  <img class="floater"    src="art/icons/key.png"      alt="" style="left:6%;  top:26px;  width:34px">
-  <img class="floater f2" src="art/icons/gem.png"      alt="" style="right:7%; top:60px;  width:40px">
-  <img class="floater f3" src="art/icons/jackpot.png"  alt="" style="left:12%; top:120px; width:30px">
   <h1>PROOF OF GREED</h1>
   <div class="tagline">Every key you fed the maze. Every hit you cashed. Your <b>real lifetime receipt</b>, read straight from the Abstract chain.</div>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
@@ -201,12 +203,11 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
     <div class="cast">
       <div class="bubble" id="taunt">insert wallet. receive judgment.</div>
       <img class="hero" src="art/enemies/jackalot.png" alt="Sir Jackalot">
-      <img class="pet" src="art/enemies/smallslime.png" alt="">
     </div>
     <div class="form">
       <div class="scope">
-        <button id="scEvent" class="scope-btn on" type="button">DEED SEASON 17–28.09</button>
-        <button id="scLife" class="scope-btn" type="button">LIFETIME</button>
+        <button id="scEvent" class="scope-btn on" type="button"><img class="scope-ic" src="art/icons/corn.png" alt="">DEED SEASON 17–28.09</button>
+        <button id="scLife" class="scope-btn" type="button"><img class="scope-ic" src="art/icons/marble.png" alt="">LIFETIME</button>
       </div>
       <div class="row">
         <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="0x your wallet address">
@@ -214,9 +215,9 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
       </div>
       <div class="chips">
         <span class="lbl">try a real one:</span>
-        <span class="chip" data-a="0x7a25766ad7f1c66cf5a38c89a75fc98b41889941">🐋 whale 0x7a25…9941</span>
-        <span class="chip" data-a="0x28cfe81381060ea23d7baa72b51b7116f99d9bb1">💰 winner 0x28cf…9bb1</span>
-        <span class="chip" data-a="0xa43073b5eb85bbf66a41066e01529360dc1cddbe">🎯 hitter 0xa430…ddbe</span>
+        <span class="chip" data-a="0x7a25766ad7f1c66cf5a38c89a75fc98b41889941"><img class="chip-ic" src="art/icons/treasure.png" alt="">whale 0x7a25…9941</span>
+        <span class="chip" data-a="0x28cfe81381060ea23d7baa72b51b7116f99d9bb1"><img class="chip-ic" src="art/icons/gem.png" alt="">winner 0x28cf…9bb1</span>
+        <span class="chip" data-a="0xa43073b5eb85bbf66a41066e01529360dc1cddbe"><img class="chip-ic" src="art/icons/jackpot.png" alt="">hitter 0xa430…ddbe</span>
       </div>
       <div id="status"></div>
     </div>
@@ -286,7 +287,12 @@ const usd6 = raw => raw / 1e6;
 
 /* sprites for the paper */
 const SPR = {};
-for (const [k, src] of Object.entries({ jackalot: "art/enemies/jackalot.png", slime: "art/enemies/smallslime.png" })) {
+for (const [k, src] of Object.entries({
+  jackalot: "art/enemies/jackalot.png", slime: "art/enemies/smallslime.png",
+  potmimic: "art/enemies/potmimick.png", mediumslime: "art/enemies/mediumslime.png",
+  frogglet: "art/enemies/frogglet.png", ringjak: "art/enemies/ringjak.png",
+  boomcap: "art/enemies/boomcap.png", ghost1: "art/enemies/ghost1.png",
+})) {
   const im = new Image(); im.src = src; SPR[k] = im;
 }
 
@@ -385,13 +391,13 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
 
 function verdictOf(pl) {
   if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? "no trace in deed season… yet. the corn race ends 28.09." : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
-  if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "jackalot", flip: false };
+  if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "potmimic", flip: false };
   if (pl.biggest && pl.biggest.usd >= 1000 && pl.net >= 0) return { stamp: "HOUSE FAVORITE", color: "#2e7d4f", line: "jackalot whispers your name in his sleep.", sprite: "jackalot", flip: true };
-  if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "jackalot", flip: true };
-  if (pl.net > 0.005) return { stamp: "IN PROFIT", color: "#2e7d4f", line: "jackalot is taking notes on you.", sprite: "jackalot", flip: true };
-  if (Math.abs(pl.net) <= 0.005) return { stamp: "BREAK-EVEN", color: "#8a6d1f", line: "the maze respected your time. rare.", sprite: "slime", flip: false };
-  if (pl.net >= -100) return { stamp: "REKT", color: "#b3382c", line: "the maze thanks you for your contribution.", sprite: "jackalot", flip: false };
-  return { stamp: "CERTIFIED REKT", color: "#b3382c", line: "your corn fed someone else's jackpot. classic.", sprite: "jackalot", flip: false };
+  if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "mediumslime", flip: true };
+  if (pl.net > 0.005) return { stamp: "IN PROFIT", color: "#2e7d4f", line: "jackalot is taking notes on you.", sprite: "frogglet", flip: true };
+  if (Math.abs(pl.net) <= 0.005) return { stamp: "BREAK-EVEN", color: "#8a6d1f", line: "the maze respected your time. rare.", sprite: "ringjak", flip: false };
+  if (pl.net >= -100) return { stamp: "REKT", color: "#b3382c", line: "the maze thanks you for your contribution.", sprite: "boomcap", flip: false };
+  return { stamp: "CERTIFIED REKT", color: "#b3382c", line: "your corn fed someone else's jackpot. classic.", sprite: "ghost1", flip: false };
 }
 
 /* ═══════════════ RECEIPT (thermal paper, dot-matrix type) ═══════════════ */
@@ -613,7 +619,7 @@ const statusEl = $("status");
 let lastPL = null;
 let lastWallet = null;
 let scope = "event";
-window.__POG = { lastPL: null };
+window.__POG = { lastPL: null, SPR };
 
 // last block of Deed Season (binary search, cached) — only needed after 28.09
 async function eventEndBlock(head) {
@@ -678,7 +684,7 @@ async function run(wallet, force = false) {
     const v = verdictOf(pl);
     $("verdictLine").textContent = v.line;
     const spr = $("verdictSprite");
-    spr.src = v.sprite === "slime" ? "art/enemies/smallslime.png" : "art/enemies/jackalot.png";
+    spr.src = SPR[v.sprite].src;
     spr.classList.toggle("flip", v.flip);
     $("stage").classList.remove("hidden");
     statusEl.className = "";
@@ -714,14 +720,17 @@ $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").d
 document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("addr").value = c.dataset.a; run(c.dataset.a); }));
 $("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 $("fresh").addEventListener("click", () => { const a = $("addr").value.trim() || (lastPL && lastPL.wallet); if (a) run(a, true); });
-$("dl").addEventListener("click", () => {
+$("dl").addEventListener("click", e => {
   const cv = $("cv");
-  cv.toBlob(b => {
-    const url = URL.createObjectURL(b);
-    const a = document.createElement("a");
-    a.href = url; a.download = `proof-of-greed-${(lastPL?.wallet || "wallet").slice(2, 8)}.png`;
-    a.click(); setTimeout(() => URL.revokeObjectURL(url), 4000);
-  }, "image/png");
+  try {
+    cv.toBlob(b => {
+      if (!b) { e.target.textContent = "NEED HTTP(S) HOST"; return; }
+      const url = URL.createObjectURL(b);
+      const a = document.createElement("a");
+      a.href = url; a.download = `proof-of-greed-${(lastPL?.wallet || "wallet").slice(2, 8)}.png`;
+      a.click(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }, "image/png");
+  } catch { e.target.textContent = "NEED HTTP(S) HOST"; }
 });
 $("share").addEventListener("click", async e => {
   const t = shareText();
@@ -758,14 +767,14 @@ async function liveTick() {
     const sum = a => a.reduce((x, l) => x + usd6(word(l, 0)), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
-      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now" },
-      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposits" },
-      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawals" },
-      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones" },
-      { lbl: "BLOCK", val: head.toLocaleString("en-US"), sub: "abstract head · live" },
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now", ic: "art/icons/treasure.png" },
+      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposits", ic: "art/icons/key.png" },
+      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawals", ic: "art/icons/amber.png" },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones", ic: "art/icons/gem.png" },
+      { lbl: "BLOCK", val: head.toLocaleString("en-US"), sub: "abstract head · live", ic: "art/icons/marble.png" },
     ];
     $("stats").innerHTML = cards.map(c =>
-      `<div class="stat"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+      `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
     const feed = [...logs].sort((a, b) => (parseInt(b.blockNumber, 16) - parseInt(a.blockNumber, 16)) || (b.logIndex - a.logIndex)).slice(0, 10);
     $("feed").innerHTML = feed.map(l => {
       const t = l.topics[0];
@@ -796,21 +805,21 @@ async function loadData() {
     ]);
     if (pools) {
       $("poolStats").innerHTML = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber },
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot" },
-        { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain" },
-      ].map(c => `<div class="stat"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot", ic: "art/icons/jackpot.png" },
+        { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain", ic: "art/icons/throne.png" },
+      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
     }
     if (hall && (hall.topsE || hall.tops)) {
       const T = hall.topsE || hall.tops;
       const tot = hall.totalsE || hall.totals || {};
-      const col = (cls, title, rows, fmt) =>
-        `<div class="hcol ${cls}"><h3>${title}</h3>` + rows.map((r, i) =>
+      const col = (cls, title, rows, fmt, ic) =>
+        `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
           `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
       $("hall").innerHTML =
-        col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true)) +
-        col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v)) +
-        col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v));
+        col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true), "art/icons/treasure.png") +
+        col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v), "art/icons/gem.png") +
+        col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v), "art/icons/corn.png");
       const at = hall.totals || {};
       $("hallAge").textContent = `deed season: fed ${kUsd(tot.fed || 0)} · cashed ${kUsd(tot.cashed || 0)} · hits ${kUsd(tot.hits || 0)} · all-time: ${kUsd(at.fed || 0)} fed · bot-updated ${(hall.t || "").slice(11, 16)} UTC`;
       $("hallBox").hidden = false;
@@ -819,6 +828,38 @@ async function loadData() {
 }
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
+
+/* ═══════════════ BACKGROUND LOOT SCATTER (seeded, decorative) ═══════════════ */
+(function scatter() {
+  const items = [
+    "art/enemies/bat.png", "art/icons/corn.png", "art/enemies/boomcap.png", "art/talents/greed.png",
+    "art/enemies/ghost2.png", "art/icons/key.png", "art/enemies/skelechump.png", "art/talents/berserker.png",
+    "art/enemies/lobcap.png", "art/icons/gem.png", "art/enemies/frogspawn.png", "art/talents/cleave.png",
+    "art/enemies/ringjak.png", "art/icons/marble.png", "art/enemies/whipweed.png", "art/talents/vampiric.png",
+    "art/enemies/croaker.png", "art/icons/evekey.png", "art/enemies/skelearcher.png", "art/talents/prospector.png",
+    "art/enemies/mediumslime.png", "art/icons/throne.png", "art/enemies/potmimick.png", "art/talents/salvage.png",
+    "art/enemies/ghost1.png", "art/icons/worldkey.png", "art/enemies/frogglet.png", "art/talents/momentum.png",
+    "art/enemies/enragedringjak.png", "art/icons/amber.png", "art/enemies/smallslime.png", "art/talents/sharp_blade.png",
+    "art/enemies/megawhipweed.png", "art/icons/treasure.png", "art/enemies/ghost3.png", "art/talents/divine_shield.png",
+  ];
+  const host = $("bgScatter");
+  let sd = cyrb("scatter", 7);
+  const rnd = () => (sd = (sd * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  const N = 42;
+  let html = "";
+  for (let i = 0; i < N; i++) {
+    const src = items[i % items.length];
+    const edge = rnd() < 0.6;
+    const left = edge ? (rnd() < 0.5 ? 1 + 15 * rnd() : 83 + 15 * rnd()) : 22 + 56 * rnd();
+    const top = ((i + 0.1 + 0.8 * rnd()) / N) * 100;
+    const w = Math.round(22 + rnd() * 46);
+    const op = (0.05 + rnd() * 0.08).toFixed(3);
+    const rot = Math.round(-24 + rnd() * 48);
+    const anim = rnd() < 0.5 ? `animation:floaty ${(5 + rnd() * 6).toFixed(1)}s steps(6) ${(-rnd() * 6).toFixed(1)}s infinite;` : "";
+    html += `<img src="${src}" alt="" style="position:absolute;left:${left.toFixed(1)}%;top:${top.toFixed(2)}%;width:${w}px;opacity:${op};transform:rotate(${rot}deg);${anim}">`;
+  }
+  host.innerHTML = html;
+})();
 </script>
 </body>
 </html>
