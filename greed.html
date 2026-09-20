@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROOF OF GREED — Maze of Gains lifetime receipt</title>
+<meta name="description" content="Paste your wallet. Get your real lifetime Maze of Gains receipt from the Abstract chain: keys fed, cash out, maze hits, NET. Not financial advice.">
+<meta property="og:title" content="PROOF OF GREED — your Maze of Gains receipt">
+<meta property="og:description" content="Your lifetime MoG P&L, straight from the Abstract chain. Print your receipt.">
+<meta property="og:image" content="og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+:root{
+  --bg:#0d0b14; --panel:#141122; --line:#2e2848; --text:#ece9f4; --muted:#a49cb8;
+  --gold:#f5c542; --green:#6ee7a0; --red:#ff7a7a; --violet:#9d8df1; --pink:#f06ba8;
+  --px:'Press Start 2P', monospace; --term:'VT323', 'Courier New', monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html{scrollbar-color:var(--line) var(--bg)}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--term); font-size:20px;
+  min-height:100vh; overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 90% 46% at 50% -8%, #1d1636 0%, transparent 62%),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(157,141,241,.045) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(157,141,241,.045) 47px 48px);
+}
+img{image-rendering:pixelated}
+/* CRT scanlines + vignette */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:60;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 120% 90% at 50% 50%, transparent 62%, rgba(0,0,0,.42) 100%);
+}
+/* ══ attract-mode marquee ══ */
+.marquee{
+  overflow:hidden; white-space:nowrap; border-bottom:3px solid var(--line);
+  background:#0a0813; padding:9px 0; position:relative; z-index:2;
+}
+.marquee .track{display:inline-block; animation:mq 36s linear infinite; font-family:var(--px); font-size:10px; color:var(--gold); letter-spacing:.14em}
+.marquee .track span{margin:0 26px}
+.marquee .track i{font-style:normal; color:var(--violet)}
+@keyframes mq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+header{text-align:center; padding:38px 16px 4px; position:relative; z-index:2}
+h1{
+  font-family:var(--px); font-size:clamp(22px,5.4vw,44px); letter-spacing:.04em; color:var(--gold);
+  text-shadow:4px 4px 0 #4b3f8f, 8px 8px 0 rgba(0,0,0,.55);
+  animation:titleflicker 6s steps(1) infinite;
+}
+@keyframes titleflicker{0%,93%,100%{opacity:1} 94%{opacity:.72} 95%{opacity:1} 97%{opacity:.85}}
+.tagline{color:var(--muted); margin:18px auto 0; font-size:22px; line-height:1.35; max-width:640px}
+.tagline b{color:var(--text)}
+.headblock{margin-top:12px; font-size:18px; color:var(--muted); letter-spacing:.06em}
+.headblock span{color:var(--violet)}
+/* floating pixel loot */
+.floater{position:absolute; opacity:.5; pointer-events:none; z-index:1; animation:floaty 5.5s steps(6) infinite}
+.floater.f2{animation-duration:7s; animation-delay:-2s}
+.floater.f3{animation-duration:6.2s; animation-delay:-4s}
+@keyframes floaty{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
+
+main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display:flex; flex-direction:column; gap:26px; align-items:center; position:relative; z-index:2}
+/* ══ NES-style panel ══ */
+.panel{
+  width:100%; background:var(--panel); position:relative;
+  border:4px solid var(--line); box-shadow:0 0 0 4px #0a0813, 10px 10px 0 rgba(0,0,0,.5);
+  padding:26px 24px; display:flex; gap:22px; align-items:stretch;
+}
+.panel::before,.panel::after{ /* corner notches */
+  content:""; position:absolute; width:8px; height:8px; background:var(--bg);
+}
+.panel::before{top:-4px; left:-4px}
+.panel::after{bottom:-4px; right:-4px}
+.cast{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:10px; min-width:150px}
+.cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite}
+.cast img.pet{width:56px; animation:bob .9s steps(2) infinite; animation-delay:-.4s}
+@keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
+.bubble{
+  position:relative; background:#0a0813; border:3px solid var(--line); padding:10px 12px;
+  font-size:18px; line-height:1.25; color:var(--violet); max-width:190px; text-align:center;
+}
+.bubble::after{content:""; position:absolute; left:50%; bottom:-9px; width:10px; height:10px; background:#0a0813; border-right:3px solid var(--line); border-bottom:3px solid var(--line); transform:translateX(-50%) rotate(45deg)}
+.form{flex:1; display:flex; flex-direction:column; gap:16px; justify-content:center}
+.row{display:flex; gap:12px; flex-wrap:wrap}
+input[type=text]{
+  flex:1; min-width:240px; background:#0a0813; border:3px solid var(--line); color:var(--text);
+  font-family:var(--term); font-size:24px; padding:12px 14px; outline:none; letter-spacing:.03em;
+}
+input[type=text]:focus{border-color:var(--violet); box-shadow:4px 4px 0 rgba(157,141,241,.25)}
+input[type=text]::placeholder{color:#8a82a8}
+button{
+  border:3px solid #000; cursor:pointer; font-family:var(--px); font-size:11px; letter-spacing:.06em;
+  padding:15px 18px; color:#1a1408; background:var(--gold); box-shadow:5px 5px 0 #6b5410;
+  transition:none;
+}
+button:hover{filter:brightness(1.1)}
+button:active{transform:translate(5px,5px); box-shadow:none}
+button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:none; box-shadow:5px 5px 0 #333}
+.btn-ghost{background:#1b1730; color:var(--muted); box-shadow:5px 5px 0 #000; border-color:var(--line)}
+.btn-ghost:hover{color:var(--text)}
+.chips{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.chips .lbl{color:var(--muted); font-size:17px}
+.chip{
+  font-family:var(--term); font-size:18px; color:var(--violet); background:#0a0813; cursor:pointer;
+  border:2px solid var(--line); padding:5px 12px;
+}
+.chip:hover{border-color:var(--violet); color:var(--text); box-shadow:3px 3px 0 rgba(157,141,241,.3)}
+#status{min-height:26px; font-size:20px; color:var(--muted); text-align:center}
+#status.err{color:var(--red)}
+#status.busy{color:var(--gold)}
+#status.busy::after{content:"▮"; animation:blink .6s steps(1) infinite; margin-left:4px}
+@keyframes blink{50%{opacity:0}}
+
+#stage{width:100%; display:flex; flex-direction:column; align-items:center; gap:18px}
+#receiptWrap{position:relative; width:100%; max-width:560px; filter:drop-shadow(10px 12px 0 rgba(0,0,0,.5)); animation:drop .45s steps(5)}
+@keyframes drop{from{opacity:0; transform:translateY(-30px)} to{opacity:1; transform:none}}
+canvas{width:100%; height:auto; display:block}
+.verdict-row{display:flex; align-items:flex-end; gap:14px; max-width:560px}
+.verdict-row img{width:96px; animation:bob 1s steps(2) infinite}
+.verdict-row img.flip{transform:scaleX(-1)}
+.verdict-row .bubble{max-width:340px; text-align:left; font-size:19px}
+.verdict-row .bubble::after{left:-9px; bottom:auto; top:26px; transform:rotate(45deg); border-right:none; border-bottom:none; border-left:3px solid var(--line); border-top:3px solid var(--line)}
+.actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+/* ══ live telemetry ══ */
+.livebox{
+  width:100%; background:var(--panel); border:4px solid var(--line);
+  box-shadow:0 0 0 4px #0a0813, 10px 10px 0 rgba(0,0,0,.5); padding:22px;
+  display:flex; flex-direction:column; gap:16px;
+}
+.live-head{font-family:var(--px); font-size:11px; color:var(--green); display:flex; gap:10px; align-items:center; letter-spacing:.08em}
+.live-head .age{margin-left:auto; color:var(--muted); font-family:var(--term); font-size:16px; letter-spacing:.04em}
+.dot{width:10px; height:10px; background:var(--green); animation:blink 1.2s steps(1) infinite; flex:none}
+.dot.gold{background:var(--gold)}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px}
+.stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
+.stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em}
+.stat .val{font-family:var(--px); font-size:13px; color:var(--gold); margin-top:9px; line-height:1.4}
+.stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
+.feed{display:flex; flex-direction:column; gap:8px}
+.fitem{
+  display:flex; gap:12px; align-items:center; background:#0a0813; padding:8px 14px;
+  border-left:5px solid var(--line); font-size:19px; animation:slidein .4s steps(4);
+}
+.fitem.win{border-color:var(--gold)} .fitem.wd{border-color:var(--green)} .fitem.dep{border-color:var(--violet)}
+.fitem .who{color:var(--text)}
+.fitem .verb{color:var(--muted)}
+.fitem .amt{margin-left:auto; font-family:var(--px); font-size:11px}
+.fitem .ago{color:var(--muted); font-size:15px; min-width:64px; text-align:right}
+@keyframes slidein{from{opacity:0; transform:translateX(-16px)} to{opacity:1; transform:none}}
+/* ══ hall of greed ══ */
+.hall{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px}
+.hcol{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
+.hcol h3{font-family:var(--px); font-size:10px; color:var(--violet); margin-bottom:10px; letter-spacing:.08em}
+.hrow{display:flex; gap:8px; font-size:17px; padding:3px 0; color:var(--muted)}
+.hrow .r{width:22px; color:#5c5478}
+.hrow .a{color:var(--text)}
+.hrow .v{margin-left:auto; font-family:var(--px); font-size:10px}
+.hcol.top-net .v{color:var(--green)} .hcol.top-hits .v{color:var(--gold)} .hcol.top-fed .v{color:var(--violet)}
+footer{
+  width:100%; max-width:860px; margin:0 auto; padding:0 16px 46px; color:var(--muted); font-size:17px; text-align:center; line-height:1.55; position:relative; z-index:2;
+}
+footer a{color:var(--violet); text-decoration:none}
+footer a:hover{text-decoration:underline}
+footer code{font-family:var(--term); font-size:16px; color:var(--text)}
+.hidden{display:none !important}
+@media (max-width:640px){
+  .panel{flex-direction:column}
+  .cast{flex-direction:row; justify-content:center; min-width:0}
+  .cast .bubble{max-width:220px}
+  .floater{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .marquee .track, .floater, .cast img, .verdict-row img, .dot, .fitem, #receiptWrap, h1, #status.busy::after{animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="marquee"><div class="track" id="mq">
+<span>★ PROOF OF GREED</span><i>◆</i><span>RAW CHAIN LOGS · NO LOGIN · NO SERVER</span><i>◆</i><span>THE MAZE ALWAYS EATS ITS SHARE</span><i>◆</i><span>SIR JACKALOT IS WATCHING YOUR NET</span><i>◆</i><span>PRINT YOUR RECEIPT</span><i>◆</i>
+<span>★ PROOF OF GREED</span><i>◆</i><span>RAW CHAIN LOGS · NO LOGIN · NO SERVER</span><i>◆</i><span>THE MAZE ALWAYS EATS ITS SHARE</span><i>◆</i><span>SIR JACKALOT IS WATCHING YOUR NET</span><i>◆</i><span>PRINT YOUR RECEIPT</span><i>◆</i>
+</div></div>
+
+<header>
+  <img class="floater"    src="art/icons/key.png"      alt="" style="left:6%;  top:26px;  width:34px">
+  <img class="floater f2" src="art/icons/gem.png"      alt="" style="right:7%; top:60px;  width:40px">
+  <img class="floater f3" src="art/icons/jackpot.png"  alt="" style="left:12%; top:120px; width:30px">
+  <h1>PROOF OF GREED</h1>
+  <div class="tagline">Every key you fed the maze. Every hit you cashed. Your <b>real lifetime receipt</b>, read straight from the Abstract chain.</div>
+  <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="cast">
+      <div class="bubble" id="taunt">insert wallet. receive judgment.</div>
+      <img class="hero" src="art/enemies/jackalot.png" alt="Sir Jackalot">
+      <img class="pet" src="art/enemies/smallslime.png" alt="">
+    </div>
+    <div class="form">
+      <div class="row">
+        <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="0x your wallet address">
+        <button id="go">PRINT MY RECEIPT</button>
+      </div>
+      <div class="chips">
+        <span class="lbl">try a real one:</span>
+        <span class="chip" data-a="0x7a25766ad7f1c66cf5a38c89a75fc98b41889941">🐋 whale 0x7a25…9941</span>
+        <span class="chip" data-a="0x28cfe81381060ea23d7baa72b51b7116f99d9bb1">💰 winner 0x28cf…9bb1</span>
+        <span class="chip" data-a="0xa43073b5eb85bbf66a41066e01529360dc1cddbe">🎯 hitter 0xa430…ddbe</span>
+      </div>
+      <div id="status"></div>
+    </div>
+  </section>
+
+  <section class="livebox">
+    <div class="live-head"><span class="dot"></span>LIVE VAULT TELEMETRY<span class="age" id="liveAge">connecting…</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <section class="livebox" id="hallBox" hidden>
+    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
+    <div class="hall" id="hall"></div>
+  </section>
+
+  <section id="stage" class="hidden">
+    <div id="receiptWrap"><canvas id="cv"></canvas></div>
+    <div class="verdict-row">
+      <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
+      <div class="bubble" id="verdictLine"></div>
+    </div>
+    <div class="actions">
+      <button id="dl">DOWNLOAD PNG</button>
+      <button id="share" class="btn-ghost">COPY SHARE TEXT</button>
+      <button id="again" class="btn-ghost">PRINT ANOTHER</button>
+      <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Source of truth: raw event logs of <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> on Abstract (chain id 2741), deploy block 60 015 914 → head —
+  <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify on explorer</a>.<br>
+  Deposits &amp; withdrawals are on-chain USDC (verified transfers). Maze hits are vault credit events (bounty / gem / throne). NET = withdrawn − deposited (realized cash).<br>
+  Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
+</footer>
+
+<script>
+"use strict";
+try { const og = document.querySelector('meta[property="og:image"]'); if (og) og.content = new URL(og.content, location.href).href; } catch {}
+// fonts injected post-parse: a hanging font CDN must never block DOMContentLoaded
+setTimeout(() => {
+  const l = document.createElement("link");
+  l.rel = "stylesheet";
+  l.href = "https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap";
+  document.head.appendChild(l);
+}, 60);
+/* ═══════════════ CONFIG — verified on-chain 20.09.2026 ═══════════════ */
+const CFG = {
+  RPC: "https://api.mainnet.abs.xyz",
+  VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
+  DEPLOY_BLOCK: 60015914,
+  SIG: {
+    DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw)
+    WITHDRAW: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f", // (player, usdcRaw, ...) USDC sent in-tx
+    WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471", // (player, usdRaw, usdRaw, counter) credit, no in-tx transfer
+  },
+  CACHE_TTL_MS: 10 * 60 * 1000,
+  MAX_LOGS: 10000,
+};
+const pad32 = a => "0x" + "0".repeat(24) + a.slice(2).toLowerCase();
+const usd6 = raw => raw / 1e6;
+
+/* sprites for the paper */
+const SPR = {};
+for (const [k, src] of Object.entries({ jackalot: "art/enemies/jackalot.png", slime: "art/enemies/smallslime.png" })) {
+  const im = new Image(); im.src = src; SPR[k] = im;
+}
+
+/* ═══════════════ RPC ═══════════════ */
+let rpcId = 0;
+async function rpc(method, params, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(CFG.RPC, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: ++rpcId, method, params }),
+      });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message || "rpc error");
+      return j.result;
+    } catch (e) {
+      if (i === tries - 1) throw e;
+      await new Promise(s => setTimeout(s, 400 * (i + 1)));
+    }
+  }
+}
+async function getLogsChunked(filter, from, to) {
+  let r;
+  try {
+    r = await rpc("eth_getLogs", [{ ...filter, fromBlock: "0x" + from.toString(16), toBlock: "0x" + to.toString(16) }]);
+  } catch (e) {
+    // RPC throws -32602 "more than 10000 results" instead of truncating — split the range
+    if (/10000 results/i.test(String(e && e.message)) && to > from) {
+      const mid = Math.floor((from + to) / 2);
+      return [...await getLogsChunked(filter, from, mid), ...await getLogsChunked(filter, mid + 1, to)];
+    }
+    throw e;
+  }
+  if (Array.isArray(r) && r.length >= CFG.MAX_LOGS && to > from) {
+    const mid = Math.floor((from + to) / 2);
+    return [...await getLogsChunked(filter, from, mid), ...await getLogsChunked(filter, mid + 1, to)];
+  }
+  return r || [];
+}
+const blockTime = async b => {
+  const blk = await rpc("eth_getBlockByNumber", ["0x" + b.toString(16), false]);
+  return blk ? parseInt(blk.timestamp, 16) * 1000 : null;
+};
+
+/* ═══════════════ P&L ENGINE (verified vs chain, to the cent) ═══════════════ */
+const word = (log, i) => parseInt(log.data.slice(2 + i * 64, 2 + (i + 1) * 64) || "0", 16);
+
+async function fetchWallet(wallet, { force = false } = {}) {
+  const ck = "pog:" + wallet.toLowerCase();
+  if (!force) {
+    try {
+      const c = JSON.parse(localStorage.getItem(ck) || "null");
+      if (c && Date.now() - c.t < CFG.CACHE_TTL_MS) return c.events;
+    } catch {}
+  }
+  const head = parseInt(await rpc("eth_blockNumber", []), 16);
+  const t = pad32(wallet);
+  const [dep, wd, win] = await Promise.all([
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.DEPOSIT, t] }, CFG.DEPLOY_BLOCK, head),
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WITHDRAW, t] }, CFG.DEPLOY_BLOCK, head),
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WIN, t] }, CFG.DEPLOY_BLOCK, head),
+  ]);
+  const events = {
+    head,
+    deposits: dep.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
+    withdrawals: wd.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
+    wins: win.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
+  };
+  try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), events })); } catch {}
+  return events;
+}
+
+async function buildPL(wallet, ev) {
+  const sum = a => a.reduce((s, x) => s + x.usd, 0);
+  const deposits = sum(ev.deposits), withdrawals = sum(ev.withdrawals), wins = sum(ev.wins);
+  const net = withdrawals - deposits;
+  const all = [...ev.deposits, ...ev.withdrawals, ...ev.wins];
+  const biggest = ev.wins.length ? ev.wins.reduce((a, b) => (b.usd > a.usd ? b : a)) : null;
+  const first = all.length ? Math.min(...all.map(x => x.block)) : null;
+  const last = all.length ? Math.max(...all.map(x => x.block)) : null;
+  const tsBlocks = [...new Set([biggest?.block, first, last].filter(Boolean))];
+  const tsMap = {};
+  await Promise.all(tsBlocks.map(async b => { tsMap[b] = await blockTime(b); }));
+  return {
+    wallet, net, deposits, withdrawals, wins,
+    nDep: ev.deposits.length, nWd: ev.withdrawals.length, nWin: ev.wins.length,
+    biggest: biggest ? { usd: biggest.usd, at: tsMap[biggest.block] } : null,
+    firstAt: first ? tsMap[first] : null,
+    lastAt: last ? tsMap[last] : null,
+    head: ev.head,
+  };
+}
+
+function verdictOf(pl) {
+  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
+  if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "jackalot", flip: false };
+  if (pl.biggest && pl.biggest.usd >= 1000 && pl.net >= 0) return { stamp: "HOUSE FAVORITE", color: "#2e7d4f", line: "jackalot whispers your name in his sleep.", sprite: "jackalot", flip: true };
+  if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "jackalot", flip: true };
+  if (pl.net > 0.005) return { stamp: "IN PROFIT", color: "#2e7d4f", line: "jackalot is taking notes on you.", sprite: "jackalot", flip: true };
+  if (Math.abs(pl.net) <= 0.005) return { stamp: "BREAK-EVEN", color: "#8a6d1f", line: "the maze respected your time. rare.", sprite: "slime", flip: false };
+  if (pl.net >= -100) return { stamp: "REKT", color: "#b3382c", line: "the maze thanks you for your contribution.", sprite: "jackalot", flip: false };
+  return { stamp: "CERTIFIED REKT", color: "#b3382c", line: "your corn fed someone else's jackpot. classic.", sprite: "jackalot", flip: false };
+}
+
+/* ═══════════════ RECEIPT (thermal paper, dot-matrix type) ═══════════════ */
+const cyrb = (str, seed = 0) => {
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0) * 4294967296 + (h1 >>> 0);
+};
+const money = (v, sign = false) => {
+  const s = v < 0 ? "-" : sign ? "+" : "";
+  return s + "$" + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+const dateStr = ms => ms ? new Date(ms).toISOString().slice(0, 10) : "--";
+const short = a => a.slice(0, 6) + "…" + a.slice(-4);
+
+function drawReceipt(pl) {
+  const v = verdictOf(pl);
+  const W = 760, S = 2;
+  const TERM = '"VT323", "Courier New", monospace';
+  const PIX = '"Press Start 2P", ' + TERM;
+  const PAPER = "#f5f0e2", INK = "#241f18", MUT = "#7c7361", RED = "#b3382c", GREEN = "#2b6e46", GOLD = "#8a6d1f";
+
+  const L = [];
+  L.push({ k: "gap", h: 14 });
+  L.push({ k: "center", t: "MAZE OF GAINS x ABSTRACT CHAIN", f: `19px ${TERM}`, c: MUT, sp: 3 });
+  L.push({ k: "center", t: "PROOF OF GREED", f: `21px ${PIX}`, c: INK, dy: 14 });
+  L.push({ k: "center", t: "- LIFETIME RECEIPT -", f: `18px ${TERM}`, c: MUT, sp: 5, dy: 8 });
+  L.push({ k: "gap", h: 12 });
+  L.push({ k: "rule" });
+  L.push({ k: "row", l: "RECEIPT #" + pl.wallet.slice(-6).toUpperCase(), r: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC" });
+  L.push({ k: "row", l: "WALLET", r: short(pl.wallet) });
+  L.push({ k: "row", l: "SOURCE", r: "chain logs - blk " + pl.head.toLocaleString("en-US") });
+  L.push({ k: "rule" });
+  L.push({ k: "gap", h: 8 });
+  L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
+  L.push({ k: "row", l: `  DEPOSITS x${pl.nDep}`, r: money(pl.deposits), big: true });
+  L.push({ k: "row", l: `  ~ KEYS x$1`, r: (Math.round(pl.deposits)).toLocaleString("en-US") });
+  L.push({ k: "gap", h: 6 });
+  L.push({ k: "center", t: "WHAT THE MAZE PAID BACK", f: `18px ${TERM}`, c: MUT, sp: 3 });
+  L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
+  if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
+  L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
+  L.push({ k: "gap", h: 6 });
+  L.push({ k: "rule", zig: true });
+  L.push({ k: "net", v: pl.net });
+  L.push({ k: "rule", zig: true });
+  L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
+  L.push({ k: "gap", h: 10 });
+  L.push({ k: "center", t: "net = realized cash - unwithdrawn maze balance not counted", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: pl.firstAt ? `FIRST BLOOD ${dateStr(pl.firstAt)}  -  LAST MOVE ${dateStr(pl.lastAt)}` : "NO TRACE IN THE MAZE", f: `17px ${TERM}`, c: MUT, sp: 1, dy: 8 });
+  L.push({ k: "gap", h: 16 });
+  L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
+  L.push({ k: "barcode" });
+  L.push({ k: "center", t: pl.wallet.toLowerCase(), f: `16px ${TERM}`, c: MUT, dy: 4 });
+  L.push({ k: "center", t: "verify: explorer.mainnet.abs.xyz - vault 0x2DDF-3BbA - not financial advice", f: `15px ${TERM}`, c: MUT, dy: 8 });
+  L.push({ k: "gap", h: 20 });
+
+  const meas = document.createElement("canvas").getContext("2d");
+  const lineH = it => {
+    switch (it.k) {
+      case "gap": return it.h;
+      case "center": { meas.font = it.f; return (it.dy || 0) + 30; }
+      case "row": return it.big ? 38 : 30;
+      case "rule": return 22;
+      case "net": return 78;
+      case "stampzone": return 132;
+      case "barcode": return 76;
+    }
+  };
+  const H = 34 + L.reduce((s, it) => s + lineH(it), 0);
+
+  const cv = document.getElementById("cv");
+  cv.width = W * S; cv.height = H * S;
+  const g = cv.getContext("2d");
+  g.scale(S, S);
+
+  const Z = 9, tooth = 14;
+  g.beginPath();
+  g.moveTo(0, Z);
+  for (let x = 0; x < W; x += tooth) g.lineTo(x + tooth / 2, 0), g.lineTo(x + tooth, Z);
+  g.lineTo(W, H - Z);
+  for (let x = W; x > 0; x -= tooth) g.lineTo(x - tooth / 2, H), g.lineTo(x - tooth, H - Z);
+  g.closePath();
+  g.fillStyle = PAPER; g.fill();
+  let sd = cyrb(pl.wallet, 7);
+  const rnd = () => (sd = (sd * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  g.fillStyle = "rgba(120,100,60,.05)";
+  for (let i = 0; i < 240; i++) g.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * H), 2, 2);
+
+  const PX = 46;
+  let y = 28;
+  const drawCenter = it => {
+    y += it.dy || 0;
+    g.font = it.f; g.fillStyle = it.c; g.textBaseline = "alphabetic";
+    if (it.sp) {
+      const chars = [...it.t];
+      const widths = chars.map(ch => g.measureText(ch).width + it.sp);
+      let x = W / 2 - widths.reduce((a, b) => a + b, 0) / 2 + it.sp / 2;
+      g.textAlign = "left";
+      chars.forEach((ch, i) => { g.fillText(ch, x, y + 21); x += widths[i]; });
+    } else { g.textAlign = "center"; g.fillText(it.t, W / 2, y + 21); }
+    y += 30;
+  };
+  const drawRule = it => {
+    y += 8;
+    g.strokeStyle = "rgba(60,50,35,.55)"; g.lineWidth = 1;
+    if (it.zig) {
+      g.beginPath();
+      for (let x = PX; x < W - PX; x += 8) { g.moveTo(x, y); g.lineTo(x + 4, y + 4); g.lineTo(x + 8, y); }
+      g.stroke();
+    } else { g.setLineDash([3, 4]); g.beginPath(); g.moveTo(PX, y + 2); g.lineTo(W - PX, y + 2); g.stroke(); g.setLineDash([]); }
+    y += 14;
+  };
+
+  for (const it of L) {
+    if (it.k === "gap") { y += it.h; continue; }
+    if (it.k === "center") { drawCenter(it); continue; }
+    if (it.k === "rule") { drawRule(it); continue; }
+    if (it.k === "row") {
+      const f = `${it.big ? 27 : 22}px ${TERM}`;
+      g.font = f; g.textBaseline = "alphabetic";
+      g.fillStyle = it.accent || INK; g.textAlign = "left";
+      g.fillText(it.l, PX, y + (it.big ? 27 : 22));
+      g.textAlign = "right";
+      g.fillText(it.r, W - PX, y + (it.big ? 27 : 22));
+      if (it.big) {
+        const lw = g.measureText(it.r).width;
+        g.font = f; const lw2 = g.measureText(it.l).width;
+        g.fillStyle = "rgba(60,50,35,.35)";
+        for (let x = PX + lw2 + 8; x < W - PX - lw - 8; x += 7) g.fillRect(x, y + (it.big ? 21 : 17), 2, 2);
+      }
+      y += it.big ? 38 : 30;
+      continue;
+    }
+    if (it.k === "net") {
+      const nz = Math.abs(it.v) < 0.005 ? 0 : it.v;
+      g.textAlign = "center"; g.textBaseline = "alphabetic";
+      g.font = `20px ${TERM}`; g.fillStyle = MUT;
+      g.fillText("N E T   ( C A S H E D   O U T  -  F E D   I N )", W / 2, y + 24);
+      g.font = `64px ${TERM}`;
+      g.fillStyle = nz > 0 ? GREEN : nz === 0 ? GOLD : RED;
+      g.fillText(money(nz, true), W / 2, y + 76);
+      y += 78;
+      continue;
+    }
+    if (it.k === "stampzone") {
+      const cx = W / 2, cyy = y + 64;
+      g.save();
+      g.translate(cx, cyy);
+      g.font = `19px ${PIX}`;
+      const stw = [...it.stamp].length * 21 + 52, sth = 78;
+      g.globalAlpha = 0.93;
+      g.strokeStyle = it.color; g.lineWidth = 5;
+      g.strokeRect(-stw / 2, -sth / 2, stw, sth);
+      g.lineWidth = 2;
+      g.strokeRect(-stw / 2 + 8, -sth / 2 + 8, stw - 16, sth - 16);
+      g.fillStyle = it.color; g.textAlign = "center";
+      const chars = [...it.stamp];
+      const chw = 21; let sx = -(chars.length * chw) / 2 + chw / 2;
+      for (const ch of chars) { g.fillText(ch, sx, 8); sx += chw; }
+      g.globalCompositeOperation = "destination-out";
+      for (let i = 0; i < 110; i++) {
+        g.fillRect(-stw / 2 + rnd() * stw, -sth / 2 + rnd() * sth, rnd() * 4 + 1, rnd() * 3 + 1);
+      }
+      g.restore();
+      // secondary stamp: BOUNTY CLUB for a >=$500 hit
+      if (pl.biggest && pl.biggest.usd >= 500) {
+        g.save();
+        g.translate(152, cyy + 54);
+        g.globalAlpha = 0.9; g.strokeStyle = GOLD; g.lineWidth = 3;
+        g.strokeRect(-86, -21, 172, 42);
+        g.font = `11px ${PIX}`; g.fillStyle = GOLD; g.textAlign = "center";
+        g.fillText("BOUNTY CLUB", 0, 5);
+        g.globalCompositeOperation = "destination-out";
+        for (let i = 0; i < 40; i++) g.fillRect(-86 + rnd() * 172, -21 + rnd() * 42, rnd() * 3 + 1, rnd() * 2 + 1);
+        g.restore();
+      }
+      // sprite cameo on the paper
+      const spr = SPR[v.sprite];
+      if (spr && spr.complete && spr.naturalWidth) {
+        const sh = 92, sw = sh * spr.naturalWidth / spr.naturalHeight;
+        g.save();
+        g.globalAlpha = 0.95;
+        if (v.flip) { g.translate(W - PX - sw / 2 - 6, cyy + 6); g.scale(-1, 1); g.drawImage(spr, -sw / 2, -sh / 2, sw, sh); }
+        else g.drawImage(spr, W - PX - sw - 6, cyy + 6 - sh / 2, sw, sh);
+        g.restore();
+      }
+      y += 132;
+      continue;
+    }
+    if (it.k === "barcode") {
+      let h = cyrb(pl.wallet, 42);
+      const rr = () => (h = (h * 1103515245 + 12345) % 2147483648) / 2147483648;
+      y += 14;
+      let x = PX + 30;
+      g.fillStyle = INK;
+      while (x < W - PX - 30) {
+        const w = 2 + Math.floor(rr() * 3) * 2;
+        if (rr() > 0.42) g.fillRect(x, y, w, 42);
+        x += w + 2 + Math.floor(rr() * 3) * 2;
+      }
+      y += 62;
+      continue;
+    }
+  }
+  return cv;
+}
+
+/* ═══════════════ UI ═══════════════ */
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+let lastPL = null;
+window.__POG = { lastPL: null };
+
+const TAUNTS = [
+  "insert wallet. receive judgment.",
+  "i sleep at the end of it all. your net wakes me.",
+  "every talent i trade was once my own.",
+  "corn is a state of mind. net is a fact.",
+  "the vault remembers what you forgot.",
+  "hundreds of thousands of keys fed to me. show me yours.",
+];
+let ti = 0;
+setInterval(() => { if ($("stage").classList.contains("hidden")) { ti = (ti + 1) % TAUNTS.length; $("taunt").textContent = TAUNTS[ti]; } }, 6000);
+
+const STAGES = [
+  "contacting the abstract chain…",
+  "reading 24 600 000 blocks since vault deploy…",
+  "counting keys fed to the maze…",
+  "collecting hits from sir jackalot's ledger…",
+  "consulting sir jackalot about your decisions…",
+];
+let stageTimer = null;
+function busy(on) {
+  $("go").disabled = on;
+  if (on) {
+    let i = 0;
+    statusEl.className = "busy";
+    statusEl.textContent = STAGES[0];
+    stageTimer = setInterval(() => { i = Math.min(i + 1, STAGES.length - 1); statusEl.textContent = STAGES[i]; }, 900);
+  } else { clearInterval(stageTimer); }
+}
+function fail(msg) { statusEl.className = "err"; statusEl.textContent = "x " + msg; }
+
+async function run(wallet, force = false) {
+  wallet = wallet.trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) { fail("that's not an EVM address (need 0x + 40 hex)"); return; }
+  busy(true); $("stage").classList.add("hidden");
+  try {
+    const ev = await fetchWallet(wallet, { force });
+    const pl = await buildPL(wallet, ev);
+    lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
+    await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
+    drawReceipt(pl);
+    const v = verdictOf(pl);
+    $("verdictLine").textContent = v.line;
+    const spr = $("verdictSprite");
+    spr.src = v.sprite === "slime" ? "art/enemies/smallslime.png" : "art/enemies/jackalot.png";
+    spr.classList.toggle("flip", v.flip);
+    $("stage").classList.remove("hidden");
+    statusEl.className = "";
+    const n = pl.nDep + pl.nWd + pl.nWin;
+    statusEl.textContent = n ? `chain says: ${pl.nDep} deposits, ${pl.nWin} hits, ${pl.nWd} cash-outs - net ${money(pl.net, true)}` : "no trace of this wallet in the vault. clean record. tourist receipt it is.";
+    $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    console.error(e);
+    fail("chain read failed: " + (e.message || e) + " - retry?");
+  } finally { busy(false); }
+}
+
+function shareText() {
+  if (!lastPL) return "";
+  const p = lastPL;
+  if (!p.nDep && !p.nWd && !p.nWin)
+    return `No trace of me in the Maze of Gains. Yet. 🌽 #ProofOfGreed - print yours: ${location.href}`;
+  const hit = p.biggest ? ` - biggest hit ${money(p.biggest.usd)}` : "";
+  return `I fed Maze of Gains ${money(p.deposits)} and cashed out ${money(p.withdrawals)}${hit}. NET ${money(p.net, true)} - my receipt 👇 #ProofOfGreed\nprint yours: ${location.href}`;
+}
+
+$("go").addEventListener("click", () => run($("addr").value));
+$("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("addr").value = c.dataset.a; run(c.dataset.a); }));
+$("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+$("fresh").addEventListener("click", () => { const a = $("addr").value.trim() || (lastPL && lastPL.wallet); if (a) run(a, true); });
+$("dl").addEventListener("click", () => {
+  const cv = $("cv");
+  cv.toBlob(b => {
+    const url = URL.createObjectURL(b);
+    const a = document.createElement("a");
+    a.href = url; a.download = `proof-of-greed-${(lastPL?.wallet || "wallet").slice(2, 8)}.png`;
+    a.click(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }, "image/png");
+});
+$("share").addEventListener("click", async e => {
+  const t = shareText();
+  try { await navigator.clipboard.writeText(t); e.target.textContent = "COPIED ✓"; } catch { prompt("copy manually:", t); }
+  setTimeout(() => (e.target.textContent = "COPY SHARE TEXT"), 1600);
+});
+
+(async function tick() {
+  try {
+    const h = parseInt(await rpc("eth_blockNumber", []), 16);
+    $("headBlock").textContent = h.toLocaleString("en-US");
+  } catch { $("headBlock").textContent = "offline"; }
+  setTimeout(tick, 15000);
+})();
+
+/* ═══════════════ LIVE TELEMETRY + TAPE (chain-only, no backend) ═══════════════ */
+const USDC_ADDR = "0x84a71ccd554cc1b02749b35d22f684cc8ec987e1";
+const BLOCK_SEC = 0.484; // measured on a 2000-block sample, 20.09.2026
+const DAY_BLOCKS = 178000; // ~24h at BLOCK_SEC
+const agoStr = (head, blk) => {
+  const s = Math.max(0, Math.round((head - blk) * BLOCK_SEC));
+  if (s < 90) return s + "s";
+  if (s < 5400) return Math.round(s / 60) + "m";
+  return Math.round(s / 3600) + "h";
+};
+async function liveTick() {
+  const ageEl = $("liveAge");
+  try {
+    const head = parseInt(await rpc("eth_blockNumber", []), 16);
+    const from = head - DAY_BLOCKS; // ~24h
+    const logs = await getLogsChunked({ address: CFG.VAULT }, from, head);
+    const by = sig => logs.filter(l => l.topics[0] === sig);
+    const dep = by(CFG.SIG.DEPOSIT), wd = by(CFG.SIG.WITHDRAW), win = by(CFG.SIG.WIN);
+    const sum = a => a.reduce((x, l) => x + usd6(word(l, 0)), 0);
+    const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
+    const cards = [
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now" },
+      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposits" },
+      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawals" },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones" },
+      { lbl: "BLOCK", val: head.toLocaleString("en-US"), sub: "abstract head · live" },
+    ];
+    $("stats").innerHTML = cards.map(c =>
+      `<div class="stat"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+    const feed = [...logs].sort((a, b) => (parseInt(b.blockNumber, 16) - parseInt(a.blockNumber, 16)) || (b.logIndex - a.logIndex)).slice(0, 10);
+    $("feed").innerHTML = feed.map(l => {
+      const t = l.topics[0];
+      const kind = t === CFG.SIG.WIN ? "win" : t === CFG.SIG.WITHDRAW ? "wd" : "dep";
+      const glyph = kind === "win" ? "★" : kind === "wd" ? "▼" : "▲";
+      const verb = kind === "win" ? "maze hit credited" : kind === "wd" ? "cashed out" : "fed the vault";
+      const col = kind === "win" ? "var(--gold)" : kind === "wd" ? "var(--green)" : "var(--violet)";
+      const addr = "0x" + l.topics[1].slice(-40);
+      return `<div class="fitem ${kind}"><span class="who" style="color:${col}">${glyph} ${short(addr)}</span><span class="verb">${verb}</span><span class="amt" style="color:${col}">${money(usd6(word(l, 0)))}</span><span class="ago">~${agoStr(head, parseInt(l.blockNumber, 16))}</span></div>`;
+    }).join("");
+    ageEl.textContent = "updated " + new Date().toTimeString().slice(0, 8);
+  } catch (e) {
+    ageEl.textContent = "feed offline — retrying…";
+  }
+}
+liveTick();
+setInterval(liveTick, 45000);
+
+/* ═══════════════ BOT-FED DATA (GitHub Actions → data/*.json; skipped on file://) ═══════════════ */
+const kUsd = v => v >= 1000 ? "$" + (v / 1000).toLocaleString("en-US", { maximumFractionDigits: v >= 100000 ? 0 : 1 }) + "k" : money(v);
+async function loadData() {
+  if (location.protocol === "file:") return;
+  try {
+    const nb = "?" + Date.now();
+    const [pools, hall] = await Promise.all([
+      fetch("data/pools.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("data/hall.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
+    ]);
+    if (pools) {
+      $("stats").innerHTML += [
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot" },
+        { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain" },
+      ].map(c => `<div class="stat"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+    }
+    if (hall && hall.tops) {
+      const col = (cls, title, rows, fmt) =>
+        `<div class="hcol ${cls}"><h3>${title}</h3>` + rows.map((r, i) =>
+          `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
+      $("hall").innerHTML =
+        col("top-net", "TOP NET (CASHED − FED)", hall.tops.net, r => money(r.v, true)) +
+        col("top-hits", "TOP MAZE HITS", hall.tops.hits, r => kUsd(r.v)) +
+        col("top-fed", "TOP FED TO THE MAZE", hall.tops.fed, r => kUsd(r.v));
+      const t = hall.totals || {};
+      $("hallAge").textContent = `all-time: fed ${kUsd(t.fed || 0)} · cashed ${kUsd(t.cashed || 0)} · hits ${kUsd(t.hits || 0)} · bot-updated ${(hall.t || "").slice(11, 16)} UTC`;
+      $("hallBox").hidden = false;
+    }
+  } catch {}
+}
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
