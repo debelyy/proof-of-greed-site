@@ -108,6 +108,7 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .pool-age{grid-column:1/-1; font-size:15px; color:var(--muted); text-align:right; margin-top:-4px}
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
+.hall-note{font-size:15px; color:var(--muted); line-height:1.4}
 .chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
 .chip{
   font-family:var(--term); font-size:15px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -125,7 +126,7 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 @keyframes drop{from{opacity:0; transform:translateY(-30px)} to{opacity:1; transform:none}}
 canvas{width:100%; height:auto; display:block}
 .verdict-row{display:flex; align-items:flex-end; gap:14px; max-width:560px}
-.verdict-row img{width:96px; animation:bob 1s steps(2) infinite}
+.verdict-row img{image-rendering:pixelated; animation:bob 1s steps(2) infinite}
 .verdict-row img.flip{transform:scaleX(-1)}
 .verdict-row .bubble{max-width:340px; text-align:left; font-size:19px}
 .verdict-row .bubble::after{left:-9px; bottom:auto; top:26px; transform:rotate(45deg); border-right:none; border-bottom:none; border-left:3px solid var(--line); border-top:3px solid var(--line)}
@@ -232,6 +233,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 
   <section class="livebox" id="hallBox" hidden>
     <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
+    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits — Deed Season blocks only. free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
     <div class="hall" id="hall"></div>
   </section>
 
@@ -294,6 +296,22 @@ for (const [k, src] of Object.entries({
   boomcap: "art/enemies/boomcap.png", ghost1: "art/enemies/ghost1.png",
 })) {
   const im = new Image(); im.src = src; SPR[k] = im;
+}
+// per-sprite display calibration: content bbox inside source PNG + target visible heights
+const BBOX = {"jackalot": [60, 68, 178, 234], "slime": [110, 115, 110, 90], "potmimic": [105, 65, 115, 140], "mediumslime": [85, 100, 150, 125], "frogglet": [90, 110, 140, 105], "ringjak": [105, 85, 110, 155], "boomcap": [100, 85, 120, 155], "ghost1": [90, 75, 140, 165]};
+const REC_H = { jackalot: 92, slime: 58, potmimic: 66, mediumslime: 64, frogglet: 60, ringjak: 62, boomcap: 62, ghost1: 68 };
+const ROW_H = { jackalot: 84, slime: 50, potmimic: 58, mediumslime: 56, frogglet: 52, ringjak: 54, boomcap: 54, ghost1: 60 };
+const SPRC = {};
+for (const [k, bb] of Object.entries(BBOX)) {
+  const s = SPR[k];
+  const mk = () => {
+    try {
+      const cv = document.createElement("canvas"); cv.width = bb[2]; cv.height = bb[3];
+      cv.getContext("2d").drawImage(s, bb[0], bb[1], bb[2], bb[3], 0, 0, bb[2], bb[3]);
+      const im = new Image(); im.src = cv.toDataURL("image/png"); SPRC[k] = im;
+    } catch {} // file:// taints canvas — fall back to uncropped sprite
+  };
+  if (s.complete && s.naturalWidth) mk(); else s.addEventListener("load", mk, { once: true });
 }
 
 /* ═══════════════ RPC ═══════════════ */
@@ -582,14 +600,14 @@ function drawReceipt(pl) {
         for (let i = 0; i < 40; i++) g.fillRect(-86 + rnd() * 172, -21 + rnd() * 42, rnd() * 3 + 1, rnd() * 2 + 1);
         g.restore();
       }
-      // sprite cameo on the paper
-      const spr = SPR[v.sprite];
+      // sprite cameo on the paper (cropped to content, calibrated per sprite)
+      const spr = SPRC[v.sprite] || SPR[v.sprite];
       if (spr && spr.complete && spr.naturalWidth) {
-        const sh = 92, sw = sh * spr.naturalWidth / spr.naturalHeight;
+        const sh = REC_H[v.sprite] || 80, sw = sh * spr.naturalWidth / spr.naturalHeight;
         g.save();
         g.globalAlpha = 0.95;
-        if (v.flip) { g.translate(W - PX - sw / 2 - 6, cyy + 6); g.scale(-1, 1); g.drawImage(spr, -sw / 2, -sh / 2, sw, sh); }
-        else g.drawImage(spr, W - PX - sw - 6, cyy + 6 - sh / 2, sw, sh);
+        if (v.flip) { g.translate(W - PX - sw / 2 - 4, cyy + 10); g.scale(-1, 1); g.drawImage(spr, -sw / 2, -sh / 2, sw, sh); }
+        else g.drawImage(spr, W - PX - sw - 4, cyy + 10 - sh / 2, sw, sh);
         g.restore();
       }
       y += 132;
@@ -684,7 +702,9 @@ async function run(wallet, force = false) {
     const v = verdictOf(pl);
     $("verdictLine").textContent = v.line;
     const spr = $("verdictSprite");
-    spr.src = SPR[v.sprite].src;
+    spr.src = (SPRC[v.sprite] || SPR[v.sprite]).src;
+    spr.style.height = (ROW_H[v.sprite] || 80) + "px";
+    spr.style.width = "auto";
     spr.classList.toggle("flip", v.flip);
     $("stage").classList.remove("hidden");
     statusEl.className = "";
