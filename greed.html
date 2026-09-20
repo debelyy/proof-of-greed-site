@@ -245,6 +245,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   Source of truth: raw event logs of <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> on Abstract (chain id 2741), deploy block 60 015 914 → head —
   <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify on explorer</a>.<br>
   Deposits &amp; withdrawals are on-chain USDC (verified transfers). Maze hits are vault credit events (bounty / gem / throne). NET = withdrawn − deposited (realized cash).<br>
+  Deposits count USDC top-ups only: keys also arrive server-side (free daily/upvote claims, in-run drops, marketplace, OCH rewards) — that's how a $17 wallet can cash out thousands.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -434,6 +435,7 @@ function drawReceipt(pl) {
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "net = realized cash - unwithdrawn maze balance not counted", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: "deposits = USDC top-ups only - free/drop/market keys are server-side", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "center", t: pl.firstAt ? `FIRST BLOOD ${dateStr(pl.firstAt)}  -  LAST MOVE ${dateStr(pl.lastAt)}` : "NO TRACE IN THE MAZE", f: `17px ${TERM}`, c: MUT, sp: 1, dy: 8 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
