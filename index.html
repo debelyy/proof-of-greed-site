@@ -72,7 +72,7 @@ main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display
 .panel::before{top:-4px; left:-4px}
 .panel::after{bottom:-4px; right:-4px}
 .cast{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; min-width:0}
-.cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite}
+.cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite; cursor:pointer}
 @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
 .bubble{
   position:relative; background:#0a0813; border:3px solid var(--line); padding:10px 12px;
@@ -464,6 +464,14 @@ function drawReceipt(pl) {
   L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
+  if (pl.rankHits) {
+    L.push({ k: "gap", h: 6 });
+    L.push({ k: "center", t: pl.scope === "DEED SEASON" ? "YOUR RANK IN DEED SEASON" : "YOUR RANK ALL-TIME", f: `18px ${TERM}`, c: MUT, sp: 3 });
+    L.push({ k: "row", l: "  BY HITS", r: `#${pl.rankHits} / ${pl.fieldN}` });
+    L.push({ k: "row", l: "  BY NET", r: `#${pl.rankNet} / ${pl.fieldN}` });
+    L.push({ k: "row", l: "  LUCK INDEX (hits per $ fed)", r: pl.luck != null ? `${pl.luck.toFixed(2)} vs field ${pl.luckField.toFixed(2)}` : "free-roll, no fed $" });
+    L.push({ k: "row", l: "  STILL RIDING (max)", r: money(pl.riding), accent: GOLD });
+  }
   L.push({ k: "gap", h: 6 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
@@ -637,6 +645,7 @@ const statusEl = $("status");
 let lastPL = null;
 let lastWallet = null;
 let scope = "event";
+let HALL = null;
 window.__POG = { lastPL: null, SPR };
 
 // last block of Deed Season (binary search, cached) — only needed after 28.09
@@ -696,6 +705,17 @@ async function run(wallet, force = false) {
       if (Date.now() > CFG.EVENT.END_TS) toBlock = await eventEndBlock(ev.head);
     }
     const pl = await buildPL(wallet, ev, fromBlock, toBlock, scopeLabel);
+    if (HALL && HALL.wallets) {
+      const isE = scope === "event";
+      const act = Object.values(HALL.wallets).filter(w => isE ? (w.fedE || w.cashedE || w.hitsE) : (w.fed || w.cashed || w.hits));
+      pl.fieldN = act.length;
+      pl.rankHits = act.filter(w => (isE ? w.hitsE : w.hits) > pl.wins).length + 1;
+      pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
+      const t = isE ? HALL.totalsE : HALL.totals;
+      pl.luckField = t && t.fed ? t.hits / t.fed : 0;
+      pl.luck = pl.deposits > 0 ? pl.wins / pl.deposits : null;
+      pl.riding = Math.max(0, pl.deposits + pl.wins - pl.withdrawals);
+    }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
     drawReceipt(pl);
@@ -736,6 +756,22 @@ const setScope = s => {
 };
 $("scEvent").addEventListener("click", () => setScope("event"));
 $("scLife").addEventListener("click", () => setScope("life"));
+// easter egg: five pats on Sir Jackalot
+let jackClicks = 0;
+document.querySelector(".cast img.hero").addEventListener("click", () => {
+  jackClicks++;
+  if (jackClicks === 5) {
+    const b = $("taunt");
+    b.textContent = "psst… broke? code 6GV4FW4X feeds us both. (click bubble to copy)";
+    b.dataset.secret = "1";
+  }
+});
+$("taunt").addEventListener("click", () => {
+  if ($("taunt").dataset.secret) {
+    try { navigator.clipboard.writeText("6GV4FW4X").catch(() => {}); } catch {}
+    $("taunt").textContent = "6GV4FW4X copied. now go feed the maze.";
+  }
+});
 $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
 document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("addr").value = c.dataset.a; run(c.dataset.a); }));
 $("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
@@ -832,6 +868,7 @@ async function loadData() {
       + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
     }
     if (hall && (hall.topsE || hall.tops)) {
+      HALL = hall;
       const T = hall.topsE || hall.tops;
       const tot = hall.totalsE || hall.totals || {};
       const col = (cls, title, rows, fmt, ic) =>
