@@ -133,6 +133,7 @@ canvas{width:100%; height:auto; display:block}
 .dot{width:10px; height:10px; background:var(--green); animation:blink 1.2s steps(1) infinite; flex:none}
 .dot.gold{background:var(--gold)}
 .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px}
+#statsWrap{display:flex; flex-direction:column; gap:12px}
 .stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
 .stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em}
 .stat .val{font-family:var(--px); font-size:13px; color:var(--gold); margin-top:9px; line-height:1.4}
@@ -215,7 +216,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 
   <section class="livebox">
     <div class="live-head"><span class="dot"></span>LIVE VAULT TELEMETRY<span class="age" id="liveAge">connecting…</span></div>
-    <div class="stats" id="stats"></div>
+    <div id="statsWrap"><div class="stats" id="stats"></div><div class="stats" id="poolStats"></div></div>
     <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
@@ -749,7 +750,7 @@ async function loadData() {
       fetch("data/hall.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
     ]);
     if (pools) {
-      $("stats").innerHTML += [
+      $("poolStats").innerHTML = [
         { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber },
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot" },
         { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain" },
