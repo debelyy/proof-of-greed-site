@@ -100,6 +100,10 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .btn-ghost{background:#1b1730; color:var(--muted); box-shadow:5px 5px 0 #000; border-color:var(--line)}
 .btn-ghost:hover{color:var(--text)}
 .chips{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.scope{display:flex; gap:8px; flex-wrap:wrap}
+.scope-btn{font-family:var(--px); font-size:9px; padding:10px 12px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.04em}
+.scope-btn.on{background:var(--gold); color:#1a1408; border-color:#000; box-shadow:3px 3px 0 #6b5410}
+.scope-btn:active{transform:none}
 .chips .lbl{color:var(--muted); font-size:17px}
 .chip{
   font-family:var(--term); font-size:18px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -200,6 +204,10 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
       <img class="pet" src="art/enemies/smallslime.png" alt="">
     </div>
     <div class="form">
+      <div class="scope">
+        <button id="scEvent" class="scope-btn on" type="button">DEED SEASON 17–28.09</button>
+        <button id="scLife" class="scope-btn" type="button">LIFETIME</button>
+      </div>
       <div class="row">
         <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="0x your wallet address">
         <button id="go">PRINT MY RECEIPT</button>
@@ -271,6 +279,7 @@ const CFG = {
   },
   CACHE_TTL_MS: 10 * 60 * 1000,
   MAX_LOGS: 10000,
+  EVENT: { START_BLOCK: 84166603, START_TS: 1789660800000, END_TS: 1790611200000 }, // Deed Season: 17.09 16:00 → 28.09 16:00 UTC
 };
 const pad32 = a => "0x" + "0".repeat(24) + a.slice(2).toLowerCase();
 const usd6 = raw => raw / 1e6;
@@ -351,20 +360,22 @@ async function fetchWallet(wallet, { force = false } = {}) {
   return events;
 }
 
-async function buildPL(wallet, ev) {
+async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
+  const inWin = b => b >= fromBlock && b <= toBlock;
+  const dep = ev.deposits.filter(d => inWin(d.block)), wd = ev.withdrawals.filter(d => inWin(d.block)), win = ev.wins.filter(d => inWin(d.block));
   const sum = a => a.reduce((s, x) => s + x.usd, 0);
-  const deposits = sum(ev.deposits), withdrawals = sum(ev.withdrawals), wins = sum(ev.wins);
+  const deposits = sum(dep), withdrawals = sum(wd), wins = sum(win);
   const net = withdrawals - deposits;
-  const all = [...ev.deposits, ...ev.withdrawals, ...ev.wins];
-  const biggest = ev.wins.length ? ev.wins.reduce((a, b) => (b.usd > a.usd ? b : a)) : null;
+  const all = [...dep, ...wd, ...win];
+  const biggest = win.length ? win.reduce((a, b) => (b.usd > a.usd ? b : a)) : null;
   const first = all.length ? Math.min(...all.map(x => x.block)) : null;
   const last = all.length ? Math.max(...all.map(x => x.block)) : null;
   const tsBlocks = [...new Set([biggest?.block, first, last].filter(Boolean))];
   const tsMap = {};
   await Promise.all(tsBlocks.map(async b => { tsMap[b] = await blockTime(b); }));
   return {
-    wallet, net, deposits, withdrawals, wins,
-    nDep: ev.deposits.length, nWd: ev.withdrawals.length, nWin: ev.wins.length,
+    wallet, net, deposits, withdrawals, wins, scope: scopeLabel,
+    nDep: dep.length, nWd: wd.length, nWin: win.length,
     biggest: biggest ? { usd: biggest.usd, at: tsMap[biggest.block] } : null,
     firstAt: first ? tsMap[first] : null,
     lastAt: last ? tsMap[last] : null,
@@ -373,7 +384,7 @@ async function buildPL(wallet, ev) {
 }
 
 function verdictOf(pl) {
-  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
+  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? "no trace in deed season… yet. the corn race ends 28.09." : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
   if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "jackalot", flip: false };
   if (pl.biggest && pl.biggest.usd >= 1000 && pl.net >= 0) return { stamp: "HOUSE FAVORITE", color: "#2e7d4f", line: "jackalot whispers your name in his sleep.", sprite: "jackalot", flip: true };
   if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "jackalot", flip: true };
@@ -412,7 +423,8 @@ function drawReceipt(pl) {
   L.push({ k: "gap", h: 14 });
   L.push({ k: "center", t: "MAZE OF GAINS x ABSTRACT CHAIN", f: `19px ${TERM}`, c: MUT, sp: 3 });
   L.push({ k: "center", t: "PROOF OF GREED", f: `21px ${PIX}`, c: INK, dy: 14 });
-  L.push({ k: "center", t: "- LIFETIME RECEIPT -", f: `18px ${TERM}`, c: MUT, sp: 5, dy: 8 });
+  L.push({ k: "center", t: pl.scope === "DEED SEASON" ? "- DEED SEASON RECEIPT -" : "- LIFETIME RECEIPT -", f: `18px ${TERM}`, c: MUT, sp: 5, dy: 8 });
+  if (pl.scope === "DEED SEASON") L.push({ k: "center", t: "17.09 16:00 - 28.09 16:00 UTC - the corn race window", f: `16px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 12 });
   L.push({ k: "rule" });
   L.push({ k: "row", l: "RECEIPT #" + pl.wallet.slice(-6).toUpperCase(), r: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC" });
@@ -436,7 +448,7 @@ function drawReceipt(pl) {
   L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "net = realized cash - unwithdrawn maze balance not counted", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "center", t: "deposits = USDC top-ups only - free/drop/market keys are server-side", f: `16px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: pl.firstAt ? `FIRST BLOOD ${dateStr(pl.firstAt)}  -  LAST MOVE ${dateStr(pl.lastAt)}` : "NO TRACE IN THE MAZE", f: `17px ${TERM}`, c: MUT, sp: 1, dy: 8 });
+  L.push({ k: "center", t: pl.firstAt ? `FIRST BLOOD ${dateStr(pl.firstAt)}  -  LAST MOVE ${dateStr(pl.lastAt)}` : pl.scope === "DEED SEASON" ? "NO TRACE IN DEED SEASON" : "NO TRACE IN THE MAZE", f: `17px ${TERM}`, c: MUT, sp: 1, dy: 8 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -599,7 +611,23 @@ function drawReceipt(pl) {
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
 let lastPL = null;
+let lastWallet = null;
+let scope = "event";
 window.__POG = { lastPL: null };
+
+// last block of Deed Season (binary search, cached) — only needed after 28.09
+async function eventEndBlock(head) {
+  try { const c = parseInt(localStorage.getItem("pog:endblock") || "0", 10); if (c > CFG.EVENT.START_BLOCK) return c; } catch {}
+  const tsAt = async b => parseInt((await rpc("eth_getBlockByNumber", ["0x" + b.toString(16), false])).timestamp, 16);
+  let lo = CFG.EVENT.START_BLOCK, hi = head;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (await tsAt(mid) >= CFG.EVENT.END_TS / 1000) hi = mid; else lo = mid + 1;
+  }
+  const end = lo - 1;
+  try { localStorage.setItem("pog:endblock", String(end)); } catch {}
+  return end;
+}
 
 const TAUNTS = [
   "insert wallet. receive judgment.",
@@ -634,10 +662,16 @@ function fail(msg) { statusEl.className = "err"; statusEl.textContent = "x " + m
 async function run(wallet, force = false) {
   wallet = wallet.trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) { fail("that's not an EVM address (need 0x + 40 hex)"); return; }
+  lastWallet = wallet;
   busy(true); $("stage").classList.add("hidden");
   try {
     const ev = await fetchWallet(wallet, { force });
-    const pl = await buildPL(wallet, ev);
+    let fromBlock = CFG.DEPLOY_BLOCK, toBlock = Infinity, scopeLabel = "LIFETIME";
+    if (scope === "event") {
+      fromBlock = CFG.EVENT.START_BLOCK; scopeLabel = "DEED SEASON";
+      if (Date.now() > CFG.EVENT.END_TS) toBlock = await eventEndBlock(ev.head);
+    }
+    const pl = await buildPL(wallet, ev, fromBlock, toBlock, scopeLabel);
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
     drawReceipt(pl);
@@ -649,7 +683,7 @@ async function run(wallet, force = false) {
     $("stage").classList.remove("hidden");
     statusEl.className = "";
     const n = pl.nDep + pl.nWd + pl.nWin;
-    statusEl.textContent = n ? `chain says: ${pl.nDep} deposits, ${pl.nWin} hits, ${pl.nWd} cash-outs - net ${money(pl.net, true)}` : "no trace of this wallet in the vault. clean record. tourist receipt it is.";
+    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposits, ${pl.nWin} hits, ${pl.nWd} cash-outs - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
     $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     console.error(e);
@@ -663,10 +697,19 @@ function shareText() {
   if (!p.nDep && !p.nWd && !p.nWin)
     return `No trace of me in the Maze of Gains. Yet. 🌽 #ProofOfGreed - print yours: ${location.href}`;
   const hit = p.biggest ? ` - biggest hit ${money(p.biggest.usd)}` : "";
-  return `I fed Maze of Gains ${money(p.deposits)} and cashed out ${money(p.withdrawals)}${hit}. NET ${money(p.net, true)} - my receipt 👇 #ProofOfGreed\nprint yours: ${location.href}`;
+  const sc = p.scope === "DEED SEASON" ? " (Deed Season)" : "";
+  return `I fed Maze of Gains ${money(p.deposits)} and cashed out ${money(p.withdrawals)}${hit}${sc}. NET ${money(p.net, true)} - my receipt 👇 #ProofOfGreed\nprint yours: ${location.href}`;
 }
 
 $("go").addEventListener("click", () => run($("addr").value));
+const setScope = s => {
+  scope = s;
+  $("scEvent").classList.toggle("on", s === "event");
+  $("scLife").classList.toggle("on", s === "life");
+  if (lastWallet) run(lastWallet);
+};
+$("scEvent").addEventListener("click", () => setScope("event"));
+$("scLife").addEventListener("click", () => setScope("life"));
 $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
 document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("addr").value = c.dataset.a; run(c.dataset.a); }));
 $("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
@@ -758,16 +801,18 @@ async function loadData() {
         { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain" },
       ].map(c => `<div class="stat"><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
     }
-    if (hall && hall.tops) {
+    if (hall && (hall.topsE || hall.tops)) {
+      const T = hall.topsE || hall.tops;
+      const tot = hall.totalsE || hall.totals || {};
       const col = (cls, title, rows, fmt) =>
         `<div class="hcol ${cls}"><h3>${title}</h3>` + rows.map((r, i) =>
           `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
       $("hall").innerHTML =
-        col("top-net", "TOP NET (CASHED − FED)", hall.tops.net, r => money(r.v, true)) +
-        col("top-hits", "TOP MAZE HITS", hall.tops.hits, r => kUsd(r.v)) +
-        col("top-fed", "TOP FED TO THE MAZE", hall.tops.fed, r => kUsd(r.v));
-      const t = hall.totals || {};
-      $("hallAge").textContent = `all-time: fed ${kUsd(t.fed || 0)} · cashed ${kUsd(t.cashed || 0)} · hits ${kUsd(t.hits || 0)} · bot-updated ${(hall.t || "").slice(11, 16)} UTC`;
+        col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true)) +
+        col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v)) +
+        col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v));
+      const at = hall.totals || {};
+      $("hallAge").textContent = `deed season: fed ${kUsd(tot.fed || 0)} · cashed ${kUsd(tot.cashed || 0)} · hits ${kUsd(tot.hits || 0)} · all-time: ${kUsd(at.fed || 0)} fed · bot-updated ${(hall.t || "").slice(11, 16)} UTC`;
       $("hallBox").hidden = false;
     }
   } catch {}
