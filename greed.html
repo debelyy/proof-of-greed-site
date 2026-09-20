@@ -56,7 +56,7 @@ h1{
 .headblock span{color:var(--violet)}
 /* background loot scatter */
 #bgScatter{position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden}
-#bgScatter img{image-rendering:pixelated}
+#bgScatter img{image-rendering:pixelated; filter:brightness(1.4) saturate(1.25)}
 @keyframes floaty{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
 
 main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display:flex; flex-direction:column; gap:26px; align-items:center; position:relative; z-index:2}
@@ -64,14 +64,14 @@ main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display
 .panel{
   width:100%; background:var(--panel); position:relative;
   border:4px solid var(--line); box-shadow:0 0 0 4px #0a0813, 10px 10px 0 rgba(0,0,0,.5);
-  padding:26px 24px; display:flex; gap:22px; align-items:stretch;
+  padding:26px 24px; display:grid; grid-template-columns:180px 1fr; gap:24px; align-items:center;
 }
 .panel::before,.panel::after{ /* corner notches */
   content:""; position:absolute; width:8px; height:8px; background:var(--bg);
 }
 .panel::before{top:-4px; left:-4px}
 .panel::after{bottom:-4px; right:-4px}
-.cast{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:10px; min-width:150px}
+.cast{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; min-width:0}
 .cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite}
 @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
 .bubble{
@@ -97,20 +97,21 @@ button:active{transform:translate(5px,5px); box-shadow:none}
 button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:none; box-shadow:5px 5px 0 #333}
 .btn-ghost{background:#1b1730; color:var(--muted); box-shadow:5px 5px 0 #000; border-color:var(--line)}
 .btn-ghost:hover{color:var(--text)}
-.chips{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
 .scope{display:flex; gap:8px; flex-wrap:wrap}
-.scope-btn{font-family:var(--px); font-size:10px; padding:11px 14px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.05em}
+.scope-btn{flex:1; text-align:center; font-family:var(--px); font-size:10px; padding:11px 14px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.05em}
 .scope-btn.on{background:var(--gold); color:#1a1408; border-color:#000; box-shadow:3px 3px 0 #6b5410}
 .scope-btn:active{transform:none}
 .scope-ic{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.9}
 .chip-ic{width:16px; height:16px; image-rendering:pixelated; vertical-align:-3px; margin-right:7px}
 .stat{position:relative}
+.pool-age{grid-column:1/-1; font-size:15px; color:var(--muted); text-align:right; margin-top:-4px}
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
-.chips .lbl{color:var(--muted); font-size:17px}
+.chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
 .chip{
-  font-family:var(--term); font-size:18px; color:var(--violet); background:#0a0813; cursor:pointer;
-  border:2px solid var(--line); padding:5px 12px;
+  font-family:var(--term); font-size:15px; color:var(--violet); background:#0a0813; cursor:pointer;
+  border:2px solid var(--line); padding:3px 9px;
 }
 .chip:hover{border-color:var(--violet); color:var(--text); box-shadow:3px 3px 0 rgba(157,141,241,.3)}
 #status{min-height:26px; font-size:20px; color:var(--muted); text-align:center}
@@ -174,10 +175,9 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 .hidden{display:none !important}
 [hidden]{display:none !important}
 @media (max-width:640px){
-  .panel{flex-direction:column}
+  .panel{grid-template-columns:1fr}
   .cast{flex-direction:row; justify-content:center; min-width:0}
   .cast .bubble{max-width:220px}
-  .floater{display:none}
 }
 @media (prefers-reduced-motion: reduce){
   .marquee .track, .floater, .cast img, .verdict-row img, .dot, .fitem, #receiptWrap, h1, #status.busy::after{animation:none !important}
@@ -807,8 +807,9 @@ async function loadData() {
       $("poolStats").innerHTML = [
         { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot", ic: "art/icons/jackpot.png" },
-        { lbl: "PAID OUT · ALL-TIME", val: Math.round(pools.totalDistributedEth).toLocaleString("en-US") + " ETH", sub: "bounties+throne settled on-chain", ic: "art/icons/throne.png" },
-      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+        { lbl: "BOUNTIES PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "all-time · total dist " + Math.round(pools.totalDistributedEth || 0) + " ETH", ic: "art/icons/throne.png" },
+      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
+      + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
     }
     if (hall && (hall.topsE || hall.tops)) {
       const T = hall.topsE || hall.tops;
@@ -853,7 +854,7 @@ setInterval(loadData, 5 * 60 * 1000);
     const left = edge ? (rnd() < 0.5 ? 1 + 15 * rnd() : 83 + 15 * rnd()) : 22 + 56 * rnd();
     const top = ((i + 0.1 + 0.8 * rnd()) / N) * 100;
     const w = Math.round(22 + rnd() * 46);
-    const op = (0.05 + rnd() * 0.08).toFixed(3);
+    const op = (0.10 + rnd() * 0.10).toFixed(3);
     const rot = Math.round(-24 + rnd() * 48);
     const anim = rnd() < 0.5 ? `animation:floaty ${(5 + rnd() * 6).toFixed(1)}s steps(6) ${(-rnd() * 6).toFixed(1)}s infinite;` : "";
     html += `<img src="${src}" alt="" style="position:absolute;left:${left.toFixed(1)}%;top:${top.toFixed(2)}%;width:${w}px;opacity:${op};transform:rotate(${rot}deg);${anim}">`;
