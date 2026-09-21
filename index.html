@@ -492,29 +492,27 @@ function drawReceipt(pl) {
   const PAPER = "#f5f0e2", INK = "#241f18", MUT = "#5e5647", RED = "#b3382c", GREEN = "#2b6e46", GOLD = "#8a6d1f";
 
   const L = [];
-  L.push({ k: "gap", h: 14 });
+  L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "MAZE OF GAINS x ABSTRACT CHAIN", f: `19px ${TERM}`, c: MUT, sp: 3 });
   L.push({ k: "center", t: "PROOF OF GREED", f: `21px ${PIX}`, c: INK, dy: 14 });
   L.push({ k: "center", t: pl.scope === "DEED SEASON" ? "- DEED SEASON RECEIPT -" : "- LIFETIME RECEIPT -", f: `18px ${TERM}`, c: MUT, sp: 5, dy: 8 });
   if (pl.scope === "DEED SEASON") L.push({ k: "center", t: "17.09 16:00 - 28.09 16:00 UTC - the corn race window", f: `16px ${TERM}`, c: MUT, dy: 2 });
-  L.push({ k: "gap", h: 12 });
+  L.push({ k: "gap", h: 8 });
   L.push({ k: "rule" });
   L.push({ k: "row", l: "RECEIPT #" + pl.wallet.slice(-6).toUpperCase(), r: new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC" });
   L.push({ k: "row", l: "WALLET", r: short(pl.wallet) });
-  L.push({ k: "row", l: "SOURCE", r: "chain logs - blk " + pl.head.toLocaleString("en-US") });
   L.push({ k: "rule" });
-  L.push({ k: "gap", h: 8 });
+  L.push({ k: "gap", h: 6 });
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
   if (pl.fed < 0.005) {
-    L.push({ k: "center", t: "NO ON-CHAIN FED IN THIS WINDOW", f: `17px ${TERM}`, c: MUT, dy: 2 });
-    L.push({ k: "center", t: "VALOR key buys, claims & drops leave no chain trace", f: `16px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: M ? "NO ON-CHAIN FED - VALOR KEYS & DROPS LEAVE NO TRACE" : "NO ON-CHAIN FED IN THIS WINDOW - VALOR KEY BUYS, CLAIMS & DROPS LEAVE NO TRACE", f: `16px ${TERM}`, c: MUT, dy: 2 });
   } else {
     L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
     if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
     L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
   }
-  L.push({ k: "gap", h: 6 });
+  L.push({ k: "gap", h: 4 });
   L.push({ k: "center", t: M ? "MAZE CREDITED (NOT CASH YET)" : "WHAT THE MAZE CREDITED (NOT CASH YET)", f: `18px ${TERM}`, c: MUT, sp: 3 });
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
   else if (!noHit) L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
@@ -524,27 +522,24 @@ function drawReceipt(pl) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  STILL IN THE MAZE (UNCASHED)" : "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
-  L.push({ k: "gap", h: 6 });
+  L.push({ k: "gap", h: 4 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   if (pl.wkShare != null && pl.wkShare > 0) {
-    L.push({ k: "gap", h: 10 });
-    L.push({ k: "center", t: (M ? "THU POOL CUT (WEEK #" : "WHERE THE REST COMES BACK (WEEK #") + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
-    L.push({ k: "row", l: M ? "  EST. THU CUT (70% OF WK KEYS)" : "  EST. THU POOL CUT (PROXY: 70% OF WEEK KEY SPEND)", r: "~" + money(pl.wkShare), accent: GOLD });
+    L.push({ k: "gap", h: 6 });
+    L.push({ k: "row", l: M ? `  THU CUT (70% KEYS · WK#${pl.wkNum})` : `  EST. THU POOL CUT (70% OF WEEK KEY SPEND · WK #${pl.wkNum})`, r: "~" + money(pl.wkShare), accent: GOLD });
     L.push({ k: "row", l: M ? "  EST. NET+CUT IF WEEK ENDED NOW" : "  ROUGH EST. NET+CUT IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
   }
-  L.push({ k: "gap", h: 10 });
-  L.push({ k: "center", t: "FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS", f: `17px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · SERVER-SIDE VALOR KEY BUYS & DROPS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
-  L.push({ k: "gap", h: 16 });
+  L.push({ k: "gap", h: 8 });
+  L.push({ k: "center", t: M ? "FED = KEYS+TOP-UPS · NET = CASHED-FED" : "FED = KEY BUYS + TOP-UPS · NET = CASHED - FED · OFF-LOG KEYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "gap", h: 12 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
   L.push({ k: "center", t: pl.wallet.toLowerCase(), f: `16px ${TERM}`, c: MUT, dy: 4 });
-  L.push({ k: "center", t: "print yours: " + location.host + " · #ProofOfGreed", f: `16px ${TERM}`, c: MUT, dy: 6 });
-  L.push({ k: "center", t: "verify: explorer.mainnet.abs.xyz · not financial advice", f: `16px ${TERM}`, c: MUT, dy: 4 });
-  L.push({ k: "gap", h: 20 });
+  L.push({ k: "center", t: M ? "print yours: " + location.host + " · NFA" : "print yours: " + location.host + " · verify: explorer.mainnet.abs.xyz · NFA", f: `16px ${TERM}`, c: MUT, dy: 6 });
+  L.push({ k: "gap", h: 14 });
 
   if (M) for (const it of L) if (it.f) it.f = it.f.replace(/^(\d+)px/, (m0, n) => Math.max(11, Math.round(n * RF)) + "px");
   const meas = document.createElement("canvas").getContext("2d");
@@ -556,7 +551,7 @@ function drawReceipt(pl) {
       case "rule": return 22;
       case "net": return 78;
       case "stampzone": return 152;
-      case "barcode": return 76;
+      case "barcode": return 68;
     }
   };
   const H = 34 + L.reduce((s, it) => s + lineH(it), 0);
@@ -694,7 +689,7 @@ function drawReceipt(pl) {
         if (rr() > 0.42) g.fillRect(x, y, w, 42);
         x += w + 2 + Math.floor(rr() * 3) * 2;
       }
-      y += 62;
+      y += 54;
       continue;
     }
   }
