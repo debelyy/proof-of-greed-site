@@ -1,7 +1,9 @@
 name: data
 
-# «Бэкенд без сервера»: раз в час сканируем новые блоки vault + пулы playmog,
-# коммитим JSON в репозиторий — статический сайт на Pages читает их рядом с собой.
+# «Бэкенд без сервера»: по крону каждые 10 минут сканируем новые блоки vault + пулы
+# playmog, коммитим JSON в репозиторий — статический сайт на Pages читает их рядом с собой.
+# NB: GitHub троттлит schedule — фактическая частота ~4-6 обновлений/день; свежесть данных
+# честно показана таймстампами на самом сайте.
 on:
   schedule:
     - cron: "*/10 * * * *"
@@ -31,5 +33,5 @@ jobs:
           git config user.email "mog-data-bot@users.noreply.github.com"
           cp greed.html index.html
           git add data index.html
-          git diff --cached --quiet && echo "no data changes" || { git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"; git pull --rebase || true
+          git diff --cached --quiet && echo "no data changes" || { git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"; git pull --rebase
           git push; }
