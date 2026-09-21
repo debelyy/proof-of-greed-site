@@ -124,8 +124,6 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .whatline{margin:10px auto 0; font-size:16px; color:var(--muted); max-width:700px; line-height:1.55; letter-spacing:0}
 .whatline a{color:var(--violet); text-decoration:none}
 .whatline a:hover{text-decoration:underline}
-.spark-head{font-family:var(--px); font-size:9px; color:var(--violet); margin-top:14px; letter-spacing:.08em}
-#spark{width:100%; height:70px; display:block}
 .chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
 .chip{
   font-family:var(--term); font-size:15px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -167,10 +165,10 @@ canvas{width:100%; height:auto; display:block}
 .stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
 .feed{display:flex; flex-direction:column; gap:8px}
 .fitem{
-  display:flex; gap:12px; align-items:center; background:#0a0813; padding:8px 14px;
-  border-left:5px solid var(--line); font-size:19px; animation:slidein .4s steps(4);
+  display:flex; gap:12px; align-items:center; background:#0a0813; padding:10px 14px;
+  border:2px solid var(--line); border-left:5px solid var(--line); font-size:19px; animation:slidein .4s steps(4);
 }
-.fitem.win{border-color:var(--gold)} .fitem.wd{border-color:var(--green)} .fitem.dep{border-color:var(--violet)}
+.fitem.win{border-left-color:var(--gold)} .fitem.wd{border-left-color:var(--green)} .fitem.dep{border-left-color:var(--violet)} .fitem.key{border-left-color:var(--pink)}
 .fitem .who{color:var(--text)}
 .fitem .verb{color:var(--muted)}
 .fitem .amt{margin-left:auto; font-family:var(--px); font-size:11px}
@@ -254,16 +252,13 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   </section>
 
   <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · DATA-BOT SNAPSHOT (SEE TIMESTAMP)</div>
-    <div class="stats" id="poolStats"></div>
-    <div id="sparkWrap" hidden>
-      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN · <span id="sparkN"></span></div>
-      <canvas id="spark"></canvas>
-    </div>
-    <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST 24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
-    <div class="stats" id="stats"></div>
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · refreshes 45s</span></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · on-chain only · 45s</span></div>
     <div class="feed" id="feed"></div>
+    <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST ~24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="pool-age">chain-live · server-side key buys &amp; claims are invisible on-chain and not counted here</div>
+    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · OFF-CHAIN BOT SNAPSHOT (SEE TIMESTAMP)</div>
+    <div class="stats" id="poolStats"></div>
   </section>
 
   <section id="stage" class="hidden">
@@ -1011,7 +1006,6 @@ async function loadData() {
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
       + `<div class="pool-age">pools &amp; jackpots ← playmog API (off-chain) · bot snapshot as of ${(pools.t || "").slice(11, 16)} UTC — chain cards below are live (45s) · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
-      drawSpark();
     }
     if (hall && (hall.topsE || hall.tops)) {
       HALL = hall;
@@ -1032,33 +1026,6 @@ const wkCd = () => {
   el.textContent = (d ? d + "d " : "") + String(h).padStart(2, "0") + "h " + String(m).padStart(2, "0") + "m";
 };
 setInterval(wkCd, 30000);
-
-function drawSpark() {
-  const cv = $("spark");
-  if (!cv || !PHIST || !PHIST.points) return;
-  const pts = PHIST.points.filter(p => !p.wk || p.wk === PHIST.week);
-  if (pts.length < 8) return;
-  $("sparkWrap").hidden = false;
-  const W = Math.max(300, cv.clientWidth) * 2, H = 140;
-  cv.width = W; cv.height = H;
-  const g = cv.getContext("2d");
-  const ws = pts.map(p => p.w);
-  const mn = Math.min(...ws), mx = Math.max(...ws);
-  g.clearRect(0, 0, W, H);
-  g.strokeStyle = "rgba(245,197,66,.25)"; g.lineWidth = 2;
-  g.beginPath(); g.moveTo(4, H - 8); g.lineTo(W - 4, H - 8); g.stroke();
-  g.strokeStyle = "#f5c542"; g.lineWidth = 3; g.beginPath();
-  pts.forEach((p, i) => {
-    const x = i / (pts.length - 1) * (W - 8) + 4;
-    const y = H - 12 - ((p.w - mn) / ((mx - mn) || 1)) * (H - 34);
-    i ? g.lineTo(x, y) : g.moveTo(x, y);
-  });
-  g.stroke();
-  g.fillStyle = "#a49cb8"; g.font = "26px VT323, monospace"; g.textAlign = "left";
-  g.fillText("max $" + Math.round(mx).toLocaleString("en-US"), 8, 24);
-  g.fillText("min $" + Math.round(mn).toLocaleString("en-US"), 8, H - 16);
-  const sn = document.getElementById("sparkN"); if (sn) sn.textContent = pts.length + " samples";
-}
 
 /* ═══════════════ BACKGROUND LOOT SCATTER (seeded, decorative) ═══════════════ */
 (function scatter() {
