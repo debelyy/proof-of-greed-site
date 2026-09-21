@@ -22,6 +22,9 @@ const SIG = {
   WD: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f",
   WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471",
 };
+// key shops: current USDC/ETH shop + legacy ETH shop (0.001 ETH/key, blocks 60.0M→~83M, counted at $1 face); KeysPurchased(buyer, qty, pricePerKey, totalPaid)
+const KEY_SHOPS = ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"];
+const KP = "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089";
 const CHUNK = 100_000;
 const VALOR_PER_USD = 100;
 const EVENT_BLOCK = 84166603; // Deed Season start: 17.09.2026 16:00:00 UTC
@@ -46,7 +49,7 @@ async function rpc(method, params, tries = 4) {
 }
 async function getLogs(from, to) {
   try {
-    return await rpc("eth_getLogs", [{ address: VAULT, fromBlock: "0x" + from.toString(16), toBlock: "0x" + to.toString(16) }]);
+    return await rpc("eth_getLogs", [{ address: [VAULT, ...KEY_SHOPS], fromBlock: "0x" + from.toString(16), toBlock: "0x" + to.toString(16) }]);
   } catch (e) {
     if (/10000 results/i.test(String(e.message)) && to > from) {
       const mid = Math.floor((from + to) / 2);
@@ -56,6 +59,10 @@ async function getLogs(from, to) {
   }
 }
 const word0 = l => parseInt(l.data.slice(2, 66) || "0", 16) / 1e6;
+// deposit USD: word0 = USDC raw (1e6); VALOR-funded deposits carry word0=0, word1 = VALOR raw (1e6, 100 VALOR = $1)
+const depUsd = l => { const w0 = parseInt(l.data.slice(2, 66) || "0", 16); return w0 > 0 ? w0 / 1e6 : parseInt(l.data.slice(66, 130) || "0", 16) / 1e8; };
+// KeysPurchased: current shop pricePerKey=1e6 (USDC, totalPaid=word2); legacy ETH shop pricePerKey=1e15 wei (0.001 ETH) — counted at $1/key face
+const kpUsd = l => parseInt(l.data.slice(66, 130) || "0", 16) > 1e12 ? parseInt(l.data.slice(2, 66) || "0", 16) : parseInt(l.data.slice(130, 194) || "0", 16) / 1e6;
 const who = l => "0x" + l.topics[1].slice(-40);
 
 const readJson = (f, def) => {
@@ -66,6 +73,9 @@ fs.mkdirSync(DATA, { recursive: true });
 const hall = readJson("hall.json", { wallets: {}, totals: { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 }, totalsE: { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 } });
 hall.totalsE = hall.totalsE || { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 };
 hall.totalsWk = hall.totalsWk || { fed: 0, hits: 0, cashed: 0 };
+for (const tt of [hall.totals, hall.totalsE]) { tt.keys = tt.keys || 0; tt.keysN = tt.keysN || 0; }
+hall.totalsWk.keys = hall.totalsWk.keys || 0;
+for (const w of Object.values(hall.wallets)) { w.keys = w.keys || 0; w.keysE = w.keysE || 0; w.wkKeys = w.wkKeys || 0; w.big = w.big || 0; w.bigE = w.bigE || 0; w.last = w.last || 0; }
 const state = readJson("state.json", { lastBlock: DEPLOY - 1 });
 const startBlock = Math.max(state.lastBlock || 0, hall.lastBlock || 0, DEPLOY - 1);
 const head = parseInt(await rpc("eth_blockNumber", []), 16);
@@ -79,8 +89,8 @@ try {
 const wei = v => { try { return Number(BigInt(v ?? "0")) / 1e18; } catch { return 0; } };
 const curWeek = poolsJ ? Number(poolsJ.weekNumber) : (hall.week || 0);
 if (hall.week !== curWeek) {
-  for (const w of Object.values(hall.wallets)) { w.wkFed = 0; w.wkHits = 0; w.wkCashed = 0; }
-  hall.totalsWk = { fed: 0, hits: 0, cashed: 0 };
+  for (const w of Object.values(hall.wallets)) { w.wkFed = 0; w.wkKeys = 0; w.wkHits = 0; w.wkCashed = 0; }
+  hall.totalsWk = { fed: 0, keys: 0, hits: 0, cashed: 0 };
   hall.week = curWeek;
   hall.weekStartBlock = null;
 }
@@ -105,16 +115,22 @@ for (let from = Math.max(startBlock + 1, DEPLOY); from <= head; from += CHUNK) {
   const logs = await getLogs(from, to);
   scanned += logs.length;
   for (const l of logs) {
-    const t = l.topics[0], usd = word0(l);
-    if (t !== SIG.DEP && t !== SIG.WD && t !== SIG.WIN) continue; // legacy/other vault events
+    const t = l.topics[0];
+    if (t !== SIG.DEP && t !== SIG.WD && t !== SIG.WIN && t !== KP) continue; // legacy/other vault events
     if (!l.topics[1]) continue;
+    const usd = t === SIG.DEP ? depUsd(l) : t === KP ? kpUsd(l) : word0(l);
     const a = who(l);
-    const w = hall.wallets[a] || (hall.wallets[a] = { fed: 0, cashed: 0, hits: 0, big: 0, last: 0, fedE: 0, cashedE: 0, hitsE: 0, bigE: 0, wkFed: 0, wkHits: 0, wkCashed: 0 });
+    const w = hall.wallets[a] || (hall.wallets[a] = { fed: 0, keys: 0, cashed: 0, hits: 0, big: 0, last: 0, fedE: 0, keysE: 0, cashedE: 0, hitsE: 0, bigE: 0, wkFed: 0, wkKeys: 0, wkHits: 0, wkCashed: 0 });
     const blk = parseInt(l.blockNumber, 16);
     w.last = blk;
     const inE = blk >= EVENT_BLOCK;
     const inW = blk >= weekStartBlock;
-    if (t === SIG.DEP) { w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++; if (inW) { w.wkFed += usd; hall.totalsWk.fed += usd; } if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; } }
+    if (t === SIG.DEP || t === KP) {
+      w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++;
+      if (t === KP) { w.keys += usd; hall.totals.keys += usd; hall.totals.keysN++; }
+      if (inW) { w.wkFed += usd; hall.totalsWk.fed += usd; if (t === KP) { w.wkKeys += usd; hall.totalsWk.keys += usd; } }
+      if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; if (t === KP) { w.keysE += usd; hall.totalsE.keys += usd; hall.totalsE.keysN++; } }
+    }
     else if (t === SIG.WD) { w.cashed += usd; hall.totals.cashed += usd; hall.totals.cashedN++; if (inW) { w.wkCashed += usd; hall.totalsWk.cashed += usd; } if (inE) { w.cashedE += usd; hall.totalsE.cashed += usd; hall.totalsE.cashedN++; } }
     else if (t === SIG.WIN) {
       w.hits += usd; hall.totals.hits += usd; hall.totals.hitsN++; if (usd > w.big) w.big = usd;
@@ -157,7 +173,7 @@ const out = {
   },
   wallets: Object.fromEntries(Object.keys(hall.wallets).sort().map(a => {
     const w = hall.wallets[a];
-    return [a, { fed: r2(w.fed), cashed: r2(w.cashed), hits: r2(w.hits), fedE: r2(w.fedE), cashedE: r2(w.cashedE), hitsE: r2(w.hitsE), wkFed: r2(w.wkFed), wkHits: r2(w.wkHits), wkCashed: r2(w.wkCashed) }];
+    return [a, { fed: r2(w.fed), keys: r2(w.keys || 0), cashed: r2(w.cashed), hits: r2(w.hits), big: r2(w.big || 0), last: w.last || 0, fedE: r2(w.fedE), keysE: r2(w.keysE || 0), cashedE: r2(w.cashedE), hitsE: r2(w.hitsE), bigE: r2(w.bigE || 0), wkFed: r2(w.wkFed), wkKeys: r2(w.wkKeys || 0), wkHits: r2(w.wkHits), wkCashed: r2(w.wkCashed) }];
   })),
 };
 fs.writeFileSync(path.join(DATA, "hall.json"), JSON.stringify(out));

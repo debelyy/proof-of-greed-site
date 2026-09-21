@@ -41,7 +41,7 @@ body::after{
   overflow:hidden; white-space:nowrap; border-bottom:3px solid var(--line);
   background:#0a0813; padding:9px 0; position:relative; z-index:2;
 }
-.marquee .track{display:inline-block; animation:mq 36s linear infinite; font-family:var(--px); font-size:10px; color:var(--gold); letter-spacing:.14em}
+.marquee .track{display:inline-block; animation:mq 56s linear infinite; font-family:var(--px); font-size:12px; color:var(--gold); letter-spacing:.14em}
 .marquee .track span{margin:0 26px}
 .marquee .track i{font-style:normal; color:var(--violet)}
 @keyframes mq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
@@ -67,19 +67,20 @@ main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display
 .panel{
   width:100%; background:var(--panel); position:relative;
   border:4px solid var(--line); box-shadow:0 0 0 4px #0a0813, 10px 10px 0 rgba(0,0,0,.5);
-  padding:26px 24px; display:grid; grid-template-columns:180px 1fr; gap:24px; align-items:center;
+  padding:24px 24px 20px; display:grid; grid-template-columns:180px 1fr; gap:24px; align-items:start;
 }
 .panel::before,.panel::after{ /* corner notches */
   content:""; position:absolute; width:8px; height:8px; background:var(--bg);
 }
 .panel::before{top:-4px; left:-4px}
 .panel::after{bottom:-4px; right:-4px}
-.cast{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; min-width:0}
+.cast{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:14px; min-width:0; padding-top:2px}
 .cast img.hero{width:118px; animation:bob 1.1s steps(2) infinite; cursor:pointer}
 @keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
 .bubble{
   position:relative; background:#0a0813; border:3px solid var(--line); padding:10px 12px;
   font-size:18px; line-height:1.25; color:var(--violet); max-width:190px; text-align:center;
+  min-height:80px; display:flex; align-items:center; justify-content:center;
 }
 .bubble::after{content:""; position:absolute; left:50%; bottom:-9px; width:10px; height:10px; background:#0a0813; border-right:3px solid var(--line); border-bottom:3px solid var(--line); transform:translateX(-50%) rotate(45deg)}
 .form{flex:1; display:flex; flex-direction:column; gap:16px; justify-content:center}
@@ -100,7 +101,7 @@ button:active{transform:translate(5px,5px); box-shadow:none}
 button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:none; box-shadow:5px 5px 0 #333}
 .btn-ghost{background:#1b1730; color:var(--muted); box-shadow:5px 5px 0 #000; border-color:var(--line)}
 .btn-ghost:hover{color:var(--text)}
-.chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+.chips{display:flex; gap:6px; flex-wrap:wrap; align-items:center; justify-content:center}
 .scope{display:flex; gap:8px; flex-wrap:wrap}
 .scope-btn{flex:1; text-align:center; font-family:var(--px); font-size:10px; padding:11px 14px; background:#1b1730; color:var(--muted); border:2px solid var(--line); box-shadow:none; letter-spacing:.05em}
 .scope-btn.on{background:var(--gold); color:#1a1408; border-color:#000; box-shadow:3px 3px 0 #6b5410}
@@ -113,7 +114,10 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
 .hall-note{font-size:15px; color:var(--muted); line-height:1.4}
 .receipt-legend{font-size:15px; color:var(--muted); text-align:center; line-height:1.5}
-.whatline{margin-top:10px; font-size:16px; color:var(--muted)}
+.hint{font-size:15px; color:var(--muted); text-align:center; letter-spacing:.02em; line-height:1.5}
+.hint span{display:inline-block; white-space:nowrap; margin:0 5px}
+#statusMore:empty{display:none}
+.whatline{margin:10px auto 0; font-size:16px; color:var(--muted); max-width:700px; line-height:1.55; letter-spacing:0}
 .whatline a{color:var(--violet); text-decoration:none}
 .whatline a:hover{text-decoration:underline}
 .spark-head{font-family:var(--px); font-size:9px; color:var(--violet); margin-top:14px; letter-spacing:.08em}
@@ -137,9 +141,10 @@ canvas{width:100%; height:auto; display:block}
 .verdict-row{display:flex; align-items:flex-end; gap:14px; max-width:560px}
 .verdict-row img{image-rendering:pixelated; animation:bob 1s steps(2) infinite}
 .verdict-row img.flip{transform:scaleX(-1)}
-.verdict-row .bubble{max-width:340px; text-align:left; font-size:19px}
+.verdict-row .bubble{max-width:340px; text-align:left; font-size:19px; display:block; min-height:0}
 .verdict-row .bubble::after{left:-9px; bottom:auto; top:26px; transform:rotate(45deg); border-right:none; border-bottom:none; border-left:3px solid var(--line); border-top:3px solid var(--line)}
 .actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:center}
+#dl{flex:1 1 100%; max-width:560px}
 /* ══ live telemetry ══ */
 .livebox{
   width:100%; background:var(--panel); border:4px solid var(--line);
@@ -153,8 +158,8 @@ canvas{width:100%; height:auto; display:block}
 .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px}
 #statsWrap{display:flex; flex-direction:column; gap:12px}
 .stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
-.stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em}
-.stat .val{font-family:var(--px); font-size:13px; color:var(--gold); margin-top:9px; line-height:1.4; white-space:nowrap}
+.stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em; padding-right:26px}
+.stat .val{font-family:var(--px); font-size:clamp(10px,3.3vw,13px); color:var(--gold); margin-top:9px; line-height:1.4; white-space:nowrap}
 .stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
 .feed{display:flex; flex-direction:column; gap:8px}
 .fitem{
@@ -177,7 +182,7 @@ canvas{width:100%; height:auto; display:block}
 .hrow .v{margin-left:auto; font-family:var(--px); font-size:10px}
 .hcol.top-net .v{color:var(--green)} .hcol.top-hits .v{color:var(--gold)} .hcol.top-fed .v{color:var(--violet)}
 footer{
-  width:100%; max-width:860px; margin:0 auto; padding:0 16px 46px; color:var(--muted); font-size:17px; text-align:center; line-height:1.55; position:relative; z-index:2;
+  width:100%; max-width:860px; margin:0 auto; padding:0 16px 46px; color:var(--muted); font-size:17px; text-align:left; line-height:1.55; position:relative; z-index:2;
 }
 footer a{color:var(--violet); text-decoration:none}
 footer a:hover{text-decoration:underline}
@@ -193,8 +198,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   .fitem .verb{display:none}
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
-  #receiptWrap{overflow-x:auto}
-  #receiptWrap canvas{min-width:600px; width:600px}
+  .chip{padding:9px 12px; font-size:16px}
   .actions{flex-direction:column; align-items:stretch}
 }
 #status:empty{display:none}
@@ -212,16 +216,12 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 <body>
 <div id="bgScatter" aria-hidden="true"></div>
 
-<div class="marquee"><div class="track" id="mq">
-<span>★ PROOF OF GREED</span><i>◆</i><span>RAW CHAIN LOGS · NO LOGIN · NO SERVER</span><i>◆</i><span>THE MAZE ALWAYS EATS ITS SHARE</span><i>◆</i><span>SIR JACKALOT IS WATCHING YOUR NET</span><i>◆</i><span>PRINT YOUR RECEIPT</span><i>◆</i>
-<span>★ PROOF OF GREED</span><i>◆</i><span>RAW CHAIN LOGS · NO LOGIN · NO SERVER</span><i>◆</i><span>THE MAZE ALWAYS EATS ITS SHARE</span><i>◆</i><span>SIR JACKALOT IS WATCHING YOUR NET</span><i>◆</i><span>PRINT YOUR RECEIPT</span><i>◆</i>
-</div></div>
+<div class="marquee"><div class="track" id="mq"></div></div>
 
 <header>
   <h1>PROOF OF GREED</h1>
-  <div class="tagline">Every key you fed the maze. Every hit you cashed. Your <b>real lifetime receipt</b>, read straight from the Abstract chain.</div>
-  <div class="whatline">MAZE OF GAINS = 10-FLOOR DUNGEON CRAWLER ON ABSTRACT · KEY = $1 · WINS PAID IN VALOR (100 = $1) · <a href="https://playmog.xyz" target="_blank" rel="noopener">play</a> · your wallet = your in-game Abstract address</div>
-  <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
+  <div class="tagline">Every key you fed the maze. Every hit you cashed. Your <b>real on-chain receipt</b>, read straight from the Abstract chain.</div>
+  <div class="whatline">Maze of Gains = a 10-floor dungeon crawler on Abstract · key = $1 · wins paid in VALOR (100 = $1) · your wallet = your in-game Abstract address · <a href="https://playmog.xyz" target="_blank" rel="noopener">play →</a></div>
 </header>
 
 <main>
@@ -236,9 +236,10 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
         <button id="scLife" class="scope-btn" type="button"><img class="scope-ic" src="art/icons/marble.png" alt="">LIFETIME</button>
       </div>
       <div class="row">
-        <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="0x your wallet address">
+        <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="paste your 0x… wallet address">
         <button id="go">PRINT MY RECEIPT</button>
       </div>
+      <div class="hint"><span>1 · paste your in-game Abstract wallet</span> <span>2 · pick DEED SEASON or LIFETIME</span> <span>3 · PRINT MY RECEIPT → download or share</span></div>
       <div class="chips">
         <span class="lbl">try a real one:</span>
         <span class="chip" data-a="0x7a25766ad7f1c66cf5a38c89a75fc98b41889941"><img class="chip-ic" src="art/icons/treasure.png" alt="">whale 0x7a25…9941</span>
@@ -246,20 +247,21 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
         <span class="chip" data-a="0xa43073b5eb85bbf66a41066e01529360dc1cddbe"><img class="chip-ic" src="art/icons/jackpot.png" alt="">hitter 0xa430…ddbe</span>
       </div>
       <div id="status"></div>
+      <div id="statusMore" class="hint"></div>
     </div>
   </section>
 
   <section id="stage" class="hidden">
     <div id="receiptWrap"><canvas id="cv"></canvas></div>
-    <div class="receipt-legend">FED = USDC DEPOSITS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW</div>
     <div class="verdict-row">
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE</div>
     <div class="actions">
       <button id="dl">DOWNLOAD PNG</button>
-      <button id="cpng" class="btn-ghost">COPY PNG</button>
-      <button id="share" class="btn-ghost">COPY SHARE TEXT</button>
+      <button id="cpng" class="btn-ghost">COPY IMAGE</button>
+      <button id="share" class="btn-ghost">COPY CAPTION</button>
       <button id="again" class="btn-ghost">PRINT ANOTHER</button>
       <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
     </div>
@@ -267,29 +269,29 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 
   <section class="livebox" id="hallBox" hidden>
     <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits · the boards follow the active window (Deed Season / lifetime). free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
+    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − FED · HITS = bounty/gem/throne credits · full definitions in the legend under your receipt.</div>
     <div class="hall" id="hall"></div>
   </section>
 
   <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · BOT SNAPSHOT EVERY 10M<span class="age" id="liveAge">connecting…</span></div>
+    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · DATA-BOT SNAPSHOT (SEE TIMESTAMP)</div>
     <div class="stats" id="poolStats"></div>
     <div id="sparkWrap" hidden>
-      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED EVERY 10 MIN</div>
+      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN</div>
       <canvas id="spark"></canvas>
     </div>
-    <div class="live-head"><span class="dot"></span>CHAIN · LAST 24H · LIVE 45S</div>
+    <div class="live-head"><span class="dot"></span>CHAIN · LAST 24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
     <div class="stats" id="stats"></div>
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · refreshes 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
 </main>
 
 <footer>
-  Source of truth: raw event logs of <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> on Abstract (chain id 2741), deploy block 60 015 914 → head —
-  <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify on explorer</a>.<br>
-  Deposits &amp; withdrawals are on-chain USDC (verified transfers). Maze hits are vault credit events (bounty / gem / throne). NET = withdrawn − deposited (realized cash).<br>
-  Deposits count USDC top-ups only: keys also arrive server-side (free daily/upvote claims, in-run drops, marketplace, OCH rewards) — that's how a $17 wallet can cash out thousands.<br>
+  <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
+  Source of truth: raw event logs of the <code>key shop 0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03</code> (KeysPurchased — paid in USDC or ETH) and <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> (VALOR top-ups, cash-outs, maze hits) on Abstract (chain 2741), block 60 015 914 → head ·
+  <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
+  Invisible by nature: cross-chain buys (Robinhood/Relay) and server-side keys (free claims, drops, marketplace) never touch these contracts — that's how the $17 wallet <code>0x28cf…9bb1</code> cashed out $9.6k. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -307,11 +309,13 @@ setTimeout(() => {
 const CFG = {
   RPC: "https://api.mainnet.abs.xyz",
   VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
+  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop + legacy ETH shop (0.001 ETH/key, blocks 60.0M→~83M)
   DEPLOY_BLOCK: 60015914,
   SIG: {
-    DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw)
+    DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw=usdc*100) — VALOR top-up, NOT keys
+    KEYS: "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089", // KeysPurchased(buyer, qty, pricePerKey, totalPaid 1e6 incl 7% fee) — USDC or ETH via router
     WITHDRAW: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f", // (player, usdcRaw, ...) USDC sent in-tx
-    WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471", // (player, usdRaw, usdRaw, counter) credit, no in-tx transfer
+    WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471", // (player, usdRaw, usdRaw, unixTs) credit, no in-tx transfer
   },
   CACHE_TTL_MS: 10 * 60 * 1000,
   MAX_LOGS: 10000,
@@ -391,9 +395,13 @@ const blockTime = async b => {
 
 /* ═══════════════ P&L ENGINE (verified vs chain, to the cent) ═══════════════ */
 const word = (log, i) => parseInt(log.data.slice(2 + i * 64, 2 + (i + 1) * 64) || "0", 16);
+// vault DEPOSIT = VALOR top-up: word0 = USD raw (1e6), always >0 (verified 12,891/12,891 lifetime events); word1 fallback kept as guard
+const depUsd = log => { const w0 = word(log, 0); return w0 > 0 ? w0 / 1e6 : word(log, 1) / 1e8; };
+// KeysPurchased: current shop pricePerKey=1e6 (USDC, totalPaid=word2); legacy ETH shop pricePerKey=1e15 wei (0.001 ETH) — counted at $1/key face
+const kpUsd = log => word(log, 1) > 1e12 ? word(log, 0) : usd6(word(log, 2));
 
 async function fetchWallet(wallet, { force = false } = {}) {
-  const ck = "pog:" + wallet.toLowerCase();
+  const ck = "pog:v4:" + wallet.toLowerCase();
   if (!force) {
     try {
       const c = JSON.parse(localStorage.getItem(ck) || "null");
@@ -402,16 +410,18 @@ async function fetchWallet(wallet, { force = false } = {}) {
   }
   const head = parseInt(await rpc("eth_blockNumber", []), 16);
   const t = pad32(wallet);
-  const [dep, wd, win] = await Promise.all([
+  const [dep, wd, win, kb] = await Promise.all([
     getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.DEPOSIT, t] }, CFG.DEPLOY_BLOCK, head),
     getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WITHDRAW, t] }, CFG.DEPLOY_BLOCK, head),
     getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WIN, t] }, CFG.DEPLOY_BLOCK, head),
+    getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS, t] }, CFG.DEPLOY_BLOCK, head),
   ]);
   const events = {
     head,
-    deposits: dep.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
+    deposits: dep.map(l => ({ usd: depUsd(l), block: parseInt(l.blockNumber, 16) })),
     withdrawals: wd.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
     wins: win.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
+    keyBuys: kb.map(l => ({ qty: word(l, 0), usd: kpUsd(l), block: parseInt(l.blockNumber, 16) })),
   };
   try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), events })); } catch {}
   return events;
@@ -420,10 +430,13 @@ async function fetchWallet(wallet, { force = false } = {}) {
 async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
   const inWin = b => b >= fromBlock && b <= toBlock;
   const dep = ev.deposits.filter(d => inWin(d.block)), wd = ev.withdrawals.filter(d => inWin(d.block)), win = ev.wins.filter(d => inWin(d.block));
+  const kb = (ev.keyBuys || []).filter(d => inWin(d.block));
   const sum = a => a.reduce((s, x) => s + x.usd, 0);
   const deposits = sum(dep), withdrawals = sum(wd), wins = sum(win);
-  const net = withdrawals - deposits;
-  const all = [...dep, ...wd, ...win];
+  const keysUsd = sum(kb), keyQty = kb.reduce((s, x) => s + x.qty, 0);
+  const fed = deposits + keysUsd;
+  const net = withdrawals - fed;
+  const all = [...dep, ...wd, ...win, ...kb];
   const biggest = win.length ? win.reduce((a, b) => (b.usd > a.usd ? b : a)) : null;
   const first = all.length ? Math.min(...all.map(x => x.block)) : null;
   const last = all.length ? Math.max(...all.map(x => x.block)) : null;
@@ -431,8 +444,8 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
   const tsMap = {};
   await Promise.all(tsBlocks.map(async b => { tsMap[b] = await blockTime(b); }));
   return {
-    wallet, net, deposits, withdrawals, wins, scope: scopeLabel,
-    nDep: dep.length, nWd: wd.length, nWin: win.length,
+    wallet, net, fed, deposits, keysUsd, keyQty, withdrawals, wins, scope: scopeLabel,
+    nDep: dep.length, nKeys: kb.length, nWd: wd.length, nWin: win.length,
     biggest: biggest ? { usd: biggest.usd, at: tsMap[biggest.block] } : null,
     firstAt: first ? tsMap[first] : null,
     lastAt: last ? tsMap[last] : null,
@@ -442,8 +455,8 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
 
 function verdictOf(pl) {
   const ended = Date.now() > CFG.EVENT.END_TS;
-  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? (ended ? "no trace in deed season. the corn race ended 28.09." : "no trace in deed season… yet. the corn race ends 28.09.") : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
-  if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "potmimic", flip: false };
+  if (!pl.nDep && !pl.nKeys && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? (ended ? "no trace in deed season. the corn race ended 28.09." : "no trace in deed season… yet. the corn race ends 28.09.") : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
+  if (!pl.nWd && pl.fed > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "potmimic", flip: false };
   if (pl.biggest && pl.biggest.usd >= 1000 && pl.net >= 0) return { stamp: "HOUSE FAVORITE", color: "#2e7d4f", line: "jackalot whispers your name in his sleep.", sprite: "jackalot", flip: true };
   if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "mediumslime", flip: true };
   if (pl.net > 0.005) return { stamp: "IN PROFIT", color: "#2e7d4f", line: "jackalot is taking notes on you.", sprite: "frogglet", flip: true };
@@ -472,10 +485,11 @@ const short = a => a.slice(0, 6) + "…" + a.slice(-4);
 
 function drawReceipt(pl) {
   const v = verdictOf(pl);
-  const W = 760, S = 2;
+  const M = matchMedia("(max-width:640px)").matches;
+  const W = M ? 440 : 760, S = 2, RF = M ? 0.82 : 1;
   const TERM = '"VT323", "Courier New", monospace';
   const PIX = '"Press Start 2P", ' + TERM;
-  const PAPER = "#f5f0e2", INK = "#241f18", MUT = "#7c7361", RED = "#b3382c", GREEN = "#2b6e46", GOLD = "#8a6d1f";
+  const PAPER = "#f5f0e2", INK = "#241f18", MUT = "#5e5647", RED = "#b3382c", GREEN = "#2b6e46", GOLD = "#8a6d1f";
 
   const L = [];
   L.push({ k: "gap", h: 14 });
@@ -491,16 +505,19 @@ function drawReceipt(pl) {
   L.push({ k: "rule" });
   L.push({ k: "gap", h: 8 });
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
-  L.push({ k: "row", l: `  DEPOSITS x${pl.nDep}`, r: money(pl.deposits), big: true });
-  L.push({ k: "row", l: `  KEYS BOUGHT (~$1 EACH)`, r: (Math.round(pl.deposits)).toLocaleString("en-US") });
+  L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
+  const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
+  if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
+  L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
   L.push({ k: "gap", h: 6 });
-  L.push({ k: "center", t: "WHAT THE MAZE PAID BACK", f: `18px ${TERM}`, c: MUT, sp: 3 });
-  L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
+  L.push({ k: "center", t: M ? "MAZE CREDITED (NOT CASH YET)" : "WHAT THE MAZE CREDITED (NOT CASH YET)", f: `18px ${TERM}`, c: MUT, sp: 3 });
+  if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
+  else if (!noHit) L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
-  if (pl.rankHits && (pl.nDep || pl.nWd || pl.nWin)) {
-    if (pl.riding > 0.005) L.push({ k: "row", l: "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
-    L.push({ k: "row", l: `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
+  if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
+    if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  STILL IN THE MAZE (UNCASHED)" : "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
+    L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
   L.push({ k: "gap", h: 6 });
   L.push({ k: "rule", zig: true });
@@ -509,23 +526,22 @@ function drawReceipt(pl) {
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   if (pl.wkShare != null && pl.wkShare > 0) {
     L.push({ k: "gap", h: 10 });
-    L.push({ k: "center", t: "WHERE THE REST COMES BACK (WEEK #" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
-    L.push({ k: "row", l: "  THIS WEEK FED / HITS / CASHED", r: `${money(pl.wk.fed)} / ${money(pl.wk.hits)} / ${money(pl.wk.cashed)}` });
-    L.push({ k: "row", l: "  EST. THU POOL CUT (~70% OF KEYS RUN)", r: "~" + money(pl.wkShare), accent: GOLD });
-    L.push({ k: "row", l: "  PROJECTED CASH+POOL IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
-    L.push({ k: "center", t: "pool = 70% of key spend, paid by treasure share - free-key treasure dilutes - corn/silo/raffle see in-game", f: `15px ${TERM}`, c: MUT, dy: 4 });
+    L.push({ k: "center", t: (M ? "THU POOL CUT (WEEK #" : "WHERE THE REST COMES BACK (WEEK #") + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
+    L.push({ k: "row", l: M ? "  EST. THU CUT (70% OF WK KEYS)" : "  EST. THU POOL CUT (PROXY: 70% OF WEEK KEY SPEND)", r: "~" + money(pl.wkShare), accent: GOLD });
+    L.push({ k: "row", l: M ? "  EST. NET+CUT IF WEEK ENDED NOW" : "  ROUGH EST. NET+CUT IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
   }
   L.push({ k: "gap", h: 10 });
-  L.push({ k: "center", t: "net = realized cash - unwithdrawn maze balance not counted", f: `16px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: "deposits = USDC top-ups only - free/drop/market keys are server-side", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: "FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS", f: `17px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · SERVER-SIDE & CROSS-CHAIN KEYS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
   L.push({ k: "center", t: pl.wallet.toLowerCase(), f: `16px ${TERM}`, c: MUT, dy: 4 });
-  L.push({ k: "center", t: "print yours: " + location.host + " - #ProofOfGreed #DeedSeason", f: `16px ${TERM}`, c: MUT, dy: 6 });
-  L.push({ k: "center", t: "verify: explorer.mainnet.abs.xyz - vault 0x2DDF-3BbA - not financial advice", f: `15px ${TERM}`, c: MUT, dy: 8 });
+  L.push({ k: "center", t: "print yours: " + location.host + " · #ProofOfGreed", f: `16px ${TERM}`, c: MUT, dy: 6 });
+  L.push({ k: "center", t: "verify: explorer.mainnet.abs.xyz · not financial advice", f: `16px ${TERM}`, c: MUT, dy: 4 });
   L.push({ k: "gap", h: 20 });
 
+  if (M) for (const it of L) if (it.f) it.f = it.f.replace(/^(\d+)px/, (m0, n) => Math.max(11, Math.round(n * RF)) + "px");
   const meas = document.createElement("canvas").getContext("2d");
   const lineH = it => {
     switch (it.k) {
@@ -558,7 +574,7 @@ function drawReceipt(pl) {
   g.fillStyle = "rgba(120,100,60,.05)";
   for (let i = 0; i < 240; i++) g.fillRect(Math.floor(rnd() * W), Math.floor(rnd() * H), 2, 2);
 
-  const PX = 46;
+  const PX = M ? 26 : 46;
   let y = 28;
   const drawCenter = it => {
     y += it.dy || 0;
@@ -588,17 +604,18 @@ function drawReceipt(pl) {
     if (it.k === "center") { drawCenter(it); continue; }
     if (it.k === "rule") { drawRule(it); continue; }
     if (it.k === "row") {
-      const f = `${it.big ? 27 : 22}px ${TERM}`;
+      const rf = Math.round((it.big ? 27 : 22) * RF);
+      const f = `${rf}px ${TERM}`;
       g.font = f; g.textBaseline = "alphabetic";
       g.fillStyle = it.accent || INK; g.textAlign = "left";
-      g.fillText(it.l, PX, y + (it.big ? 27 : 22));
+      g.fillText(it.l, PX, y + rf);
       g.textAlign = "right";
-      g.fillText(it.r, W - PX, y + (it.big ? 27 : 22));
+      g.fillText(it.r, W - PX, y + rf);
       if (it.big) {
         const lw = g.measureText(it.r).width;
         g.font = f; const lw2 = g.measureText(it.l).width;
         g.fillStyle = "rgba(60,50,35,.35)";
-        for (let x = PX + lw2 + 8; x < W - PX - lw - 8; x += 7) g.fillRect(x, y + (it.big ? 21 : 17), 2, 2);
+        for (let x = PX + lw2 + 8; x < W - PX - lw - 8; x += 7) g.fillRect(x, y + rf - 6, 2, 2);
       }
       y += it.big ? 38 : 30;
       continue;
@@ -606,9 +623,9 @@ function drawReceipt(pl) {
     if (it.k === "net") {
       const nz = Math.abs(it.v) < 0.005 ? 0 : it.v;
       g.textAlign = "center"; g.textBaseline = "alphabetic";
-      g.font = `20px ${TERM}`; g.fillStyle = MUT;
-      g.fillText("N E T   ( C A S H E D   O U T  -  F E D   I N )", W / 2, y + 24);
-      g.font = `64px ${TERM}`;
+      g.font = `${Math.round(20 * RF)}px ${TERM}`; g.fillStyle = MUT;
+      g.fillText(M ? "N E T  ( C A S H E D - F E D )" : "N E T   ( C A S H E D   O U T  -  F E D   I N )", W / 2, y + 24);
+      g.font = `${Math.round(64 * RF)}px ${TERM}`;
       g.fillStyle = nz > 0 ? GREEN : nz === 0 ? GOLD : RED;
       g.fillText(money(nz, true), W / 2, y + 76);
       y += 78;
@@ -618,8 +635,9 @@ function drawReceipt(pl) {
       const cx = W / 2, cyy = y + 64;
       g.save();
       g.translate(cx, cyy);
-      g.font = `19px ${PIX}`;
-      const stw = [...it.stamp].length * 21 + 52, sth = 78;
+      g.font = `${Math.round(19 * RF)}px ${PIX}`;
+      const chw0 = Math.round(21 * RF);
+      const stw = [...it.stamp].length * chw0 + Math.round(52 * RF), sth = Math.round(78 * RF);
       g.globalAlpha = 0.93;
       g.strokeStyle = it.color; g.lineWidth = 5;
       g.strokeRect(-stw / 2, -sth / 2, stw, sth);
@@ -627,7 +645,7 @@ function drawReceipt(pl) {
       g.strokeRect(-stw / 2 + 8, -sth / 2 + 8, stw - 16, sth - 16);
       g.fillStyle = it.color; g.textAlign = "center";
       const chars = [...it.stamp];
-      const chw = 21; let sx = -(chars.length * chw) / 2 + chw / 2;
+      const chw = chw0; let sx = -(chars.length * chw) / 2 + chw / 2;
       for (const ch of chars) { g.fillText(ch, sx, 8); sx += chw; }
       g.globalCompositeOperation = "destination-out";
       for (let i = 0; i < 110; i++) {
@@ -637,7 +655,8 @@ function drawReceipt(pl) {
       // secondary stamp: BOUNTY CLUB for a >=$500 hit
       if (pl.biggest && pl.biggest.usd >= 500) {
         g.save();
-        g.translate(152, cyy + 54);
+        g.translate(M ? 112 : 152, cyy + 54);
+        if (M) g.scale(RF, RF);
         g.globalAlpha = 0.9; g.strokeStyle = GOLD; g.lineWidth = 3;
         g.strokeRect(-86, -21, 172, 42);
         g.font = `11px ${PIX}`; g.fillStyle = GOLD; g.textAlign = "center";
@@ -715,7 +734,7 @@ setInterval(() => { if ($("stage").classList.contains("hidden") && !$("taunt").d
 
 const STAGES = [
   "contacting the abstract chain…",
-  "reading 24 600 000 blocks since vault deploy…",
+  "reading the vault's full history since may 8…",
   "counting keys fed to the maze…",
   "collecting hits from sir jackalot's ledger…",
   "consulting sir jackalot about your decisions…",
@@ -740,7 +759,7 @@ async function run(wallet, force = false) {
   if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) { fail("that's not an EVM address (need 0x + 40 hex)"); return; }
   if (running) return;
   lastWallet = wallet;
-  busy(true); $("stage").classList.add("hidden");
+  busy(true); $("statusMore").textContent = ""; $("stage").classList.add("hidden");
   try {
     const ev = await fetchWallet(wallet, { force });
     let fromBlock = CFG.DEPLOY_BLOCK, toBlock = Infinity, scopeLabel = "LIFETIME";
@@ -755,13 +774,12 @@ async function run(wallet, force = false) {
       pl.fieldN = act.length;
       pl.rankHits = act.filter(w => (isE ? w.hitsE : w.hits) > pl.wins).length + 1;
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
-      pl.riding = Math.max(0, pl.deposits + pl.wins - pl.withdrawals);
+      pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals);
       const hw = HALL.wallets[wallet.toLowerCase()];
       if (hw && POOLS && HALL.totalsWk && HALL.totalsWk.fed > 0) {
         pl.wk = { fed: hw.wkFed || 0, hits: hw.wkHits || 0, cashed: hw.wkCashed || 0 };
-        // weekly pool = 70% of key spend, paid pro-rata to treasure ⇒ expected cut ≈ 0.7 × keys run ($),
-        // before free-key treasure dilution; never exceeds what was fed
-        pl.wkShare = 0.7 * (hw.wkFed || 0);
+        // weekly pool = 70% of ALL players' key spend, paid pro-rata to treasure ⇒ proxy = 0.7 × your weekly KEY spend
+        pl.wkShare = 0.7 * (hw.wkKeys != null ? hw.wkKeys : hw.wkFed || 0);
         pl.wkNum = HALL.week;
         pl.projected = pl.net + pl.wkShare;
       }
@@ -778,8 +796,12 @@ async function run(wallet, force = false) {
     spr.classList.toggle("flip", v.flip);
     $("stage").classList.remove("hidden");
     statusEl.className = "";
-    const n = pl.nDep + pl.nWd + pl.nWin;
-    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposit${pl.nDep === 1 ? "" : "s"}, ${pl.nWin} hit${pl.nWin === 1 ? "" : "s"}, ${pl.nWd} cash-out${pl.nWd === 1 ? "" : "s"} - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
+    const n = pl.nKeys + pl.nDep + pl.nWd + pl.nWin;
+    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.keyQty} keys · ${pl.nDep} top-ups · ${pl.nWin} hits · ${pl.nWd} cash-outs · net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
+    if (scope === "event") {
+      const lf = ev.deposits.reduce((s, x) => s + x.usd, 0) + (ev.keyBuys || []).reduce((s, x) => s + x.usd, 0), lc = ev.withdrawals.reduce((s, x) => s + x.usd, 0);
+      if (lf > pl.fed + 0.01 || lc > pl.withdrawals + 0.01) $("statusMore").textContent = `lifetime totals are higher: fed ${money(lf)} · cashed ${money(lc)} — press LIFETIME for the full receipt`;
+    }
     $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     console.error(e);
@@ -791,12 +813,12 @@ function shareText() {
   if (!lastPL) return "";
   const p = lastPL;
   const url = location.href.split("?")[0];
-  if (!p.nDep && !p.nWd && !p.nWin)
+  if (!p.nDep && !p.nKeys && !p.nWd && !p.nWin)
     return `TOURIST · no trace in Maze of Gains yet 🌽 print yours: ${url} #ProofOfGreed #DeedSeason`;
   const hook = `${verdictOf(p).stamp} · NET ${money(p.net, true)} (${p.scope === "DEED SEASON" ? "Deed Season" : "lifetime"})`;
   const rank = p.rankHits ? ` · #${p.rankHits} hits of ${p.fieldN} wallets` : "";
   const hit = p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "";
-  return `${hook}${rank}${hit} - fed ${money(p.deposits)}, cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
+  return `${hook}${rank}${hit} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
 
 $("go").addEventListener("click", () => run($("addr").value));
@@ -851,7 +873,7 @@ $("share").addEventListener("click", async e => {
   } catch {
     try { await navigator.clipboard.writeText(t); e.target.textContent = "COPIED ✓"; } catch { prompt("copy manually:", t); }
   }
-  setTimeout(() => (e.target.textContent = "COPY SHARE TEXT"), 1600);
+  setTimeout(() => (e.target.textContent = "COPY CAPTION"), 1600);
 });
 $("cpng").addEventListener("click", async e => {
   try {
@@ -859,9 +881,10 @@ $("cpng").addEventListener("click", async e => {
     await navigator.clipboard.write([new ClipboardItem({ "image/png": b })]);
     e.target.textContent = "COPIED ✓";
   } catch { e.target.textContent = "NOT SUPPORTED"; }
-  setTimeout(() => (e.target.textContent = "COPY PNG"), 1600);
+  setTimeout(() => (e.target.textContent = "COPY IMAGE"), 1600);
 });
 if (!navigator.clipboard || !window.ClipboardItem) $("cpng").style.display = "none";
+matchMedia("(max-width:640px)").addEventListener("change", () => { if (lastPL && !$("stage").classList.contains("hidden")) drawReceipt(lastPL); });
 $("cv").addEventListener("click", () => {
   try {
     const w = window.open("");
@@ -892,31 +915,39 @@ async function liveTick() {
   try {
     const head = parseInt(await rpc("eth_blockNumber", []), 16);
     const from = head - DAY_BLOCKS; // ~24h
-    const logs = (await getLogsChunked({ address: CFG.VAULT }, from, head))
+    const [vlogs, klogs] = await Promise.all([
+      getLogsChunked({ address: CFG.VAULT }, from, head),
+      getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS] }, from, head),
+    ]);
+    const logs = vlogs
       .filter(l => (l.topics[0] === CFG.SIG.DEPOSIT || l.topics[0] === CFG.SIG.WITHDRAW || l.topics[0] === CFG.SIG.WIN) && l.topics[1]);
+    const keys24 = klogs.filter(l => l.topics[1]);
     const by = sig => logs.filter(l => l.topics[0] === sig);
     const dep = by(CFG.SIG.DEPOSIT), wd = by(CFG.SIG.WITHDRAW), win = by(CFG.SIG.WIN);
-    const sum = a => a.reduce((x, l) => x + usd6(word(l, 0)), 0);
+    const sum = (a, f = l => usd6(word(l, 0))) => a.reduce((x, l) => x + f(l), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
       { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now", ic: "art/icons/treasure.png" },
-      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposit" + (dep.length === 1 ? "" : "s"), ic: "art/icons/key.png" },
+      { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png" },
       { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
       { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones", ic: "art/icons/gem.png" },
     ];
     $("stats").innerHTML = cards.map(c =>
       `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
-    const feed = [...logs].sort((a, b) => (parseInt(b.blockNumber, 16) - parseInt(a.blockNumber, 16)) || (b.logIndex - a.logIndex)).slice(0, 10);
-    $("feed").innerHTML = feed.map(l => {
-      const t = l.topics[0];
-      const kind = t === CFG.SIG.WIN ? "win" : t === CFG.SIG.WITHDRAW ? "wd" : "dep";
-      const glyph = kind === "win" ? "★" : kind === "wd" ? "▼" : "▲";
-      const verb = kind === "win" ? "maze hit credited" : kind === "wd" ? "cashed out" : "fed the vault";
-      const col = kind === "win" ? "var(--gold)" : kind === "wd" ? "var(--green)" : "var(--violet)";
+    const feed = [
+      ...logs.map(l => ({ l, kind: l.topics[0] === CFG.SIG.WIN ? "win" : l.topics[0] === CFG.SIG.WITHDRAW ? "wd" : "dep" })),
+      ...keys24.map(l => ({ l, kind: "key" })),
+    ].sort((a, b) => (parseInt(b.l.blockNumber, 16) - parseInt(a.l.blockNumber, 16)) || (b.l.logIndex - a.l.logIndex)).slice(0, 10);
+    $("feed").innerHTML = feed.map(({ l, kind }) => {
+      const qty = kind === "key" ? word(l, 0) : 0;
+      const glyph = kind === "win" ? "★" : kind === "wd" ? "▼" : kind === "key" ? "◆" : "▲";
+      const verb = kind === "win" ? "maze hit credited" : kind === "wd" ? "cashed out" : kind === "key" ? `bought ${qty.toLocaleString("en-US")} key${qty === 1 ? "" : "s"}` : "topped up VALOR";
+      const col = kind === "win" ? "var(--gold)" : kind === "wd" ? "var(--green)" : kind === "key" ? "var(--pink)" : "var(--violet)";
       const addr = "0x" + l.topics[1].slice(-40);
-      return `<div class="fitem ${kind}"><span class="who" style="color:${col}">${glyph} ${short(addr)}</span><span class="verb">${verb}</span><span class="amt" style="color:${col}">${money(usd6(word(l, 0)))}</span><span class="ago">~${agoStr(head, parseInt(l.blockNumber, 16))}</span></div>`;
+      const amt = kind === "key" ? kpUsd(l) : kind === "dep" ? depUsd(l) : usd6(word(l, 0));
+      return `<div class="fitem ${kind}"><span class="who" style="color:${col}">${glyph} ${short(addr)}</span><span class="verb">${verb}</span><span class="amt" style="color:${col}">${money(amt)}</span><span class="ago">~${agoStr(head, parseInt(l.blockNumber, 16))}</span></div>`;
     }).join("");
-    ageEl.textContent = "updated " + new Date().toTimeString().slice(0, 8);
+    ageEl.textContent = "updated " + new Date().toISOString().slice(11, 19) + " UTC";
   } catch (e) {
     ageEl.textContent = "feed offline — retrying…";
   }
@@ -925,6 +956,21 @@ async function liveTick() {
 
 /* ═══════════════ BOT-FED DATA (GitHub Actions → data/*.json; skipped on file://) ═══════════════ */
 const kUsd = v => v >= 1000 ? "$" + (v / 1000).toLocaleString("en-US", { maximumFractionDigits: v >= 100000 ? 0 : 1 }) + "k" : money(v);
+/* attract-mode ticker: real chain/bot facts + one easter egg, rebuilt when data lands */
+const MQ_LORE = ["RAW CHAIN LOGS · NO LOGIN · NO SERVER", "KEY = $1 · 100 VALOR = $1", "THE MAZE ALWAYS EATS ITS SHARE", "SIR JACKALOT'S REFERRAL: 6GV4FW4X — HE DENIES EVERYTHING"];
+function buildMq() {
+  const items = ["★ PROOF OF GREED"];
+  if (HALL) {
+    const t = HALL.totals || {}, n = Object.keys(HALL.wallets || {}).length;
+    if (n) items.push(n.toLocaleString("en-US") + " WALLETS SEEN IN THE MAZE");
+    items.push("LIFETIME: " + kUsd(t.fed || 0) + " FED · " + kUsd(t.cashed || 0) + " CASHED · " + kUsd(t.hits || 0) + " HITS");
+  }
+  if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · JACKPOTS " + Math.round(POOLS.jackpotsPaidEth || 0) + " ETH PAID (OFF-CHAIN)");
+  items.push(...MQ_LORE);
+  const seq = items.map(s => "<span>" + s + "</span><i>◆</i>").join("");
+  $("mq").innerHTML = seq + seq;
+}
+buildMq();
 function renderHall() {
   if (!HALL || !(HALL.topsE || HALL.tops)) return;
   const isE = scope === "event";
@@ -933,9 +979,9 @@ function renderHall() {
     `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
       `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
   $("hall").innerHTML =
-    col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true), "art/icons/treasure.png") +
-    col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v), "art/icons/gem.png") +
-    col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v), "art/icons/corn.png");
+    col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png") +
+    col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
+    col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png");
   const se = HALL.totalsE || {}, at = HALL.totals || {};
   $("hallAge").textContent = (isE
     ? `deed season: fed ${kUsd(se.fed || 0)} · cashed ${kUsd(se.cashed || 0)} · hits ${kUsd(se.hits || 0)}`
@@ -959,16 +1005,16 @@ async function loadData() {
       const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "paid in VALOR · 100 VALOR = $1 · week #" + wn + (lw ? "" : " · reset " + resetStr), ic: "art/icons/corn.png" },
-        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out pro-rata to keys", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side pool in VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · paid pro-rata to Treasure (keys multiply it)", ic: "art/icons/evekey.png", vid: "wkReset" },
       ];
-      if (lw) poolCards.push({ lbl: "LAST WEEK PAID OUT", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " at reset", ic: "art/icons/amber.png" });
+      if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png" });
       poolCards.push(
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "Jackalot bounty jackpot · gem cap $2,100 · throne pool = server state, not public", ic: "art/icons/jackpot.png" },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH distributed all-time", ic: "art/icons/throne.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "jackalot jackpot only · gem cap $2,100 · throne server-side", ic: "art/icons/jackpot.png" },
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
       );
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s · global corn & players: <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a> (off-chain)</div>`;
+      + `<div class="pool-age">pools &amp; jackpots ← playmog API (off-chain) · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a> · as of ${(pools.t || "").slice(11, 16)} UTC</div>`;
       wkCd();
       drawSpark();
     }
@@ -976,6 +1022,7 @@ async function loadData() {
       HALL = hall;
       renderHall();
     }
+    buildMq();
   } catch {}
 }
 loadData();
@@ -1035,7 +1082,7 @@ function drawSpark() {
   const host = $("bgScatter");
   let sd = cyrb("scatter", 7);
   const rnd = () => (sd = (sd * 1664525 + 1013904223) % 4294967296) / 4294967296;
-  const N = 42;
+  const N = 26;
   let html = "";
   for (let i = 0; i < N; i++) {
     const src = items[i % items.length];
@@ -1045,7 +1092,7 @@ function drawSpark() {
     const w = Math.round(22 + rnd() * 46);
     const op = (0.10 + rnd() * 0.10).toFixed(3);
     const rot = Math.round(-24 + rnd() * 48);
-    const anim = rnd() < 0.5 ? `animation:floaty ${(5 + rnd() * 6).toFixed(1)}s steps(6) ${(-rnd() * 6).toFixed(1)}s infinite;` : "";
+    const anim = rnd() < 0.3 ? `animation:floaty ${(5 + rnd() * 6).toFixed(1)}s steps(6) ${(-rnd() * 6).toFixed(1)}s infinite;` : "";
     html += `<img src="${src}" alt="" style="position:absolute;left:${left.toFixed(1)}%;top:${top.toFixed(2)}%;width:${w}px;opacity:${op};transform:rotate(${rot}deg);${anim}">`;
   }
   host.innerHTML = html;
