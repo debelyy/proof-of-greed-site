@@ -1,0 +1,26 @@
+name: deploy-cloudflare
+
+# Прямая выгрузка (wrangler pages deploy) не считается за билды Cloudflare
+# Pages (лимит 500/мес на git-интеграцию), поэтому деплоим отсюда каждым пушем,
+# включая почасовой/10-минутный cron данных.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy . --project-name=proofofgreed --branch=main --commit-dirty=true
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
