@@ -914,7 +914,14 @@ async function liveTick() {
   const ageEl = $("liveAge");
   try {
     const head = parseInt(await rpc("eth_blockNumber", []), 16);
-    const from = head - DAY_BLOCKS; // ~24h
+    // live-measured block time keeps the "24H" window honest if block cadence drifts
+    let from = head - DAY_BLOCKS;
+    try {
+      const tsNow = parseInt((await rpc("eth_getBlockByNumber", ["0x" + head.toString(16), false])).timestamp, 16);
+      const tsOld = parseInt((await rpc("eth_getBlockByNumber", ["0x" + (head - DAY_BLOCKS).toString(16), false])).timestamp, 16);
+      const sec = (tsNow - tsOld) / DAY_BLOCKS;
+      if (sec > 0.05 && sec < 5) from = head - Math.round(86400 / sec);
+    } catch {}
     const [vlogs, klogs] = await Promise.all([
       getLogsChunked({ address: CFG.VAULT }, from, head),
       getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS] }, from, head),

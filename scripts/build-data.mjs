@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * MOG DATA PIPELINE — инкрементальный скан vault + пулы playmog → data/*.json.
- * Крутится в GitHub Actions раз в час (и локально), бэкенда у сайта нет:
+ * Крутится в GitHub Actions по крону каждые 10 минут (best-effort: GH может разряжать
+ * schedule, свежесть честно показана на сайте) и локально; бэкенда у сайта нет:
  * страница просто читает готовые JSON рядом с собой.
  *
  * Запуск: node scripts/build-data.mjs   (Node >= 18, без зависимостей)
@@ -85,6 +86,11 @@ let poolsJ = null;
 try {
   const pr = await fetch(POOLS_API, { headers: { "User-Agent": "Mozilla/5.0 mog-data/1.0" }, signal: AbortSignal.timeout(30000) });
   poolsJ = await pr.json();
+  // shape guard: a renamed field must not silently publish $0 pools as if real
+  if (poolsJ && (poolsJ.weeklyPoolValor == null || poolsJ.weekNumber == null || poolsJ.weekEnd == null)) {
+    console.log("pools payload missing expected fields — ignoring this fetch");
+    poolsJ = null;
+  }
 } catch (e) { console.log("pools fetch failed:", e.message); }
 const wei = v => { try { return Number(BigInt(v ?? "0")) / 1e18; } catch { return 0; } };
 const curWeek = poolsJ ? Number(poolsJ.weekNumber) : (hall.week || 0);
@@ -124,7 +130,7 @@ for (let from = Math.max(startBlock + 1, DEPLOY); from <= head; from += CHUNK) {
     const blk = parseInt(l.blockNumber, 16);
     w.last = blk;
     const inE = blk >= EVENT_BLOCK;
-    const inW = blk >= weekStartBlock;
+    const inW = weekStartBlock > 0 && blk >= weekStartBlock;
     if (t === SIG.DEP || t === KP) {
       w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++;
       if (t === KP) { w.keys += usd; hall.totals.keys += usd; hall.totals.keysN++; }
