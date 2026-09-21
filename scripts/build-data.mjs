@@ -65,8 +65,22 @@ fs.mkdirSync(DATA, { recursive: true });
 
 const hall = readJson("hall.json", { wallets: {}, totals: { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 }, totalsE: { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 } });
 hall.totalsE = hall.totalsE || { fed: 0, cashed: 0, hits: 0, fedN: 0, cashedN: 0, hitsN: 0 };
+hall.totalsWk = hall.totalsWk || { fed: 0, hits: 0, cashed: 0 };
 const state = readJson("state.json", { lastBlock: DEPLOY - 1 });
 const head = parseInt(await rpc("eth_blockNumber", []), 16);
+
+// pools first: week number drives per-wallet weekly accumulators
+let poolsJ = null;
+try {
+  const pr = await fetch(POOLS_API, { headers: { "User-Agent": "Mozilla/5.0 mog-data/1.0" } });
+  poolsJ = await pr.json();
+} catch (e) { console.log("pools fetch failed:", e.message); }
+const curWeek = poolsJ ? Number(poolsJ.weekNumber) : (hall.week || 0);
+if (hall.week !== curWeek) {
+  for (const w of Object.values(hall.wallets)) { w.wkFed = 0; w.wkHits = 0; w.wkCashed = 0; }
+  hall.totalsWk = { fed: 0, hits: 0, cashed: 0 };
+  hall.week = curWeek;
+}
 
 let scanned = 0;
 for (let from = Math.max(state.lastBlock + 1, DEPLOY); from <= head; from += CHUNK) {
@@ -78,14 +92,14 @@ for (let from = Math.max(state.lastBlock + 1, DEPLOY); from <= head; from += CHU
     if (t !== SIG.DEP && t !== SIG.WD && t !== SIG.WIN) continue; // legacy/other vault events
     if (!l.topics[1]) continue;
     const a = who(l);
-    const w = hall.wallets[a] || (hall.wallets[a] = { fed: 0, cashed: 0, hits: 0, big: 0, last: 0, fedE: 0, cashedE: 0, hitsE: 0, bigE: 0 });
+    const w = hall.wallets[a] || (hall.wallets[a] = { fed: 0, cashed: 0, hits: 0, big: 0, last: 0, fedE: 0, cashedE: 0, hitsE: 0, bigE: 0, wkFed: 0, wkHits: 0, wkCashed: 0 });
     const blk = parseInt(l.blockNumber, 16);
     w.last = blk;
     const inE = blk >= EVENT_BLOCK;
-    if (t === SIG.DEP) { w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++; if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; } }
-    else if (t === SIG.WD) { w.cashed += usd; hall.totals.cashed += usd; hall.totals.cashedN++; if (inE) { w.cashedE += usd; hall.totalsE.cashed += usd; hall.totalsE.cashedN++; } }
+    if (t === SIG.DEP) { w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++; w.wkFed += usd; hall.totalsWk.fed += usd; if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; } }
+    else if (t === SIG.WD) { w.cashed += usd; hall.totals.cashed += usd; hall.totals.cashedN++; w.wkCashed += usd; hall.totalsWk.cashed += usd; if (inE) { w.cashedE += usd; hall.totalsE.cashed += usd; hall.totalsE.cashedN++; } }
     else if (t === SIG.WIN) {
-      w.hits += usd; hall.totals.hits += usd; hall.totals.hitsN++; if (usd > w.big) w.big = usd;
+      w.hits += usd; hall.totals.hits += usd; hall.totals.hitsN++; w.wkHits += usd; hall.totalsWk.hits += usd; if (usd > w.big) w.big = usd;
       if (inE) { w.hitsE += usd; hall.totalsE.hits += usd; hall.totalsE.hitsN++; if (usd > w.bigE) w.bigE = usd; }
     }
   }
@@ -109,6 +123,8 @@ const out = {
   headBlock: head,
   totals: Object.fromEntries(Object.entries(hall.totals).map(([k, v]) => [k, r2(v)])),
   totalsE: Object.fromEntries(Object.entries(hall.totalsE).map(([k, v]) => [k, r2(v)])),
+  totalsWk: Object.fromEntries(Object.entries(hall.totalsWk).map(([k, v]) => [k, r2(v)])),
+  week: curWeek,
   tops: {
     net: top(w => w.cashed - w.fed),
     hits: top(w => w.hits),
@@ -124,20 +140,27 @@ const out = {
 fs.writeFileSync(path.join(DATA, "hall.json"), JSON.stringify(out));
 fs.writeFileSync(path.join(DATA, "state.json"), JSON.stringify(state));
 
-try {
-  const p = await fetch(POOLS_API, { headers: { "User-Agent": "Mozilla/5.0 mog-data/1.0" } });
-  const j = await p.json();
+if (poolsJ) {
   fs.writeFileSync(path.join(DATA, "pools.json"), JSON.stringify({
     t: new Date().toISOString(),
-    weekNumber: j.weekNumber, weekEnd: j.weekEnd,
-    weeklyPoolUsd: Number(j.weeklyPoolValor ?? 0) / VALOR_PER_USD,
-    bountyPoolUsd: Number(j.jackpotPoolValor ?? 0) / VALOR_PER_USD,
-    bountyPoolEth: Number(BigInt(j.jackpotPoolWei ?? "0")) / 1e18,
-    totalDistributedEth: Number(BigInt(j.totalDistributedWei ?? "0")) / 1e18,
-    jackpotsPaidEth: Number(BigInt(j.jackpotsPaidWei ?? "0")) / 1e18,
+    weekNumber: poolsJ.weekNumber, weekEnd: poolsJ.weekEnd,
+    weeklyPoolUsd: Number(poolsJ.weeklyPoolValor ?? 0) / VALOR_PER_USD,
+    bountyPoolUsd: Number(poolsJ.jackpotPoolValor ?? 0) / VALOR_PER_USD,
+    bountyPoolEth: Number(BigInt(poolsJ.jackpotPoolWei ?? "0")) / 1e18,
+    totalDistributedEth: Number(BigInt(poolsJ.totalDistributedWei ?? "0")) / 1e18,
+    jackpotsPaidEth: Number(BigInt(poolsJ.jackpotsPaidWei ?? "0")) / 1e18,
   }));
-  console.log("pools.json updated");
-} catch (e) {
-  console.log("pools fetch failed:", e.message);
+  const hist = readJson("pools_hist.json", { points: [], lastWeek: null, week: null });
+  const wUsd = Number(poolsJ.weeklyPoolValor ?? 0) / VALOR_PER_USD;
+  if (hist.week !== null && Number(poolsJ.weekNumber) !== hist.week && hist.points.length) {
+    hist.lastWeek = { week: hist.week, paidUsd: r2(hist.points[hist.points.length - 1].w), at: new Date().toISOString() };
+  }
+  hist.week = Number(poolsJ.weekNumber);
+  hist.points.push({ t: Date.now(), w: r2(wUsd), b: r2(Number(poolsJ.jackpotPoolValor ?? 0) / VALOR_PER_USD) });
+  if (hist.points.length > 8000) hist.points = hist.points.slice(-8000);
+  fs.writeFileSync(path.join(DATA, "pools_hist.json"), JSON.stringify(hist));
+  console.log("pools.json + pools_hist.json updated");
+} else {
+  console.log("pools fetch failed — hist not touched");
 }
 console.log(`hall.json: ${Object.keys(out.wallets).length} wallets, scanned ${scanned} new events, head ${head}`);

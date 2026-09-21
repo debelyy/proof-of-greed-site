@@ -109,6 +109,8 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
 .hall-note{font-size:15px; color:var(--muted); line-height:1.4}
+.spark-head{font-family:var(--px); font-size:9px; color:var(--violet); margin-top:14px; letter-spacing:.08em}
+#spark{width:100%; height:60px; display:block}
 .chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
 .chip{
   font-family:var(--term); font-size:15px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -179,6 +181,8 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   .panel{grid-template-columns:1fr}
   .cast{flex-direction:row; justify-content:center; min-width:0}
   .cast .bubble{max-width:220px}
+  .scope{flex-direction:column}
+  .scope-btn{font-size:9px; padding:10px 8px}
 }
 @media (prefers-reduced-motion: reduce){
   .marquee .track, .floater, .cast img, .verdict-row img, .dot, .fitem, #receiptWrap, h1, #status.busy::after{animation:none !important}
@@ -227,6 +231,10 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   <section class="livebox">
     <div class="live-head"><span class="dot"></span>LIVE VAULT TELEMETRY<span class="age" id="liveAge">connecting…</span></div>
     <div id="statsWrap"><div class="stats" id="stats"></div><div class="stats" id="poolStats"></div></div>
+    <div id="sparkWrap" hidden>
+      <div class="spark-head">WEEKLY POOL GROWTH · SAMPLED EVERY 10M</div>
+      <canvas id="spark"></canvas>
+    </div>
     <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
@@ -472,6 +480,12 @@ function drawReceipt(pl) {
     L.push({ k: "row", l: "  LUCK INDEX (hits per $ fed)", r: pl.luck != null ? `${pl.luck.toFixed(2)} vs field ${pl.luckField.toFixed(2)}` : "free-roll, no fed $" });
     L.push({ k: "row", l: "  STILL RIDING (max)", r: money(pl.riding), accent: GOLD });
   }
+  if (pl.wk) {
+    L.push({ k: "gap", h: 6 });
+    L.push({ k: "center", t: "THIS WEEK (#" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 3 });
+    L.push({ k: "row", l: "  FED / HITS / CASHED", r: `${money(pl.wk.fed)} / ${money(pl.wk.hits)} / ${money(pl.wk.cashed)}` });
+    L.push({ k: "row", l: "  EST. SHARE OF WEEKLY POOL", r: "~" + money(pl.wkShare), accent: GOLD });
+  }
   L.push({ k: "gap", h: 6 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
@@ -646,6 +660,8 @@ let lastPL = null;
 let lastWallet = null;
 let scope = "event";
 let HALL = null;
+let POOLS = null;
+let PHIST = null;
 window.__POG = { lastPL: null, SPR };
 
 // last block of Deed Season (binary search, cached) — only needed after 28.09
@@ -715,6 +731,12 @@ async function run(wallet, force = false) {
       pl.luckField = t && t.fed ? t.hits / t.fed : 0;
       pl.luck = pl.deposits > 0 ? pl.wins / pl.deposits : null;
       pl.riding = Math.max(0, pl.deposits + pl.wins - pl.withdrawals);
+      const hw = HALL.wallets[wallet.toLowerCase()];
+      if (hw && POOLS && HALL.totalsWk && HALL.totalsWk.fed > 0) {
+        pl.wk = { fed: hw.wkFed || 0, hits: hw.wkHits || 0, cashed: hw.wkCashed || 0 };
+        pl.wkShare = (hw.wkFed || 0) / HALL.totalsWk.fed * POOLS.weeklyPoolUsd;
+        pl.wkNum = HALL.week;
+      }
     }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
@@ -855,17 +877,25 @@ async function loadData() {
   if (location.protocol === "file:") return;
   try {
     const nb = "?" + Date.now();
-    const [pools, hall] = await Promise.all([
+    const [pools, hall, hist] = await Promise.all([
       fetch("data/pools.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
       fetch("data/hall.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("data/pools_hist.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
     ]);
+    if (pools) POOLS = pools;
+    if (hist) PHIST = hist;
     if (pools) {
+      const lw = PHIST && PHIST.lastWeek;
       $("poolStats").innerHTML = [
         { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "LAST WEEK PAID OUT", val: lw ? kUsd(lw.paidUsd) : "—", sub: lw ? "week #" + lw.week + " at reset" : "first tracked reset pending", ic: "art/icons/amber.png" },
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot", ic: "art/icons/jackpot.png" },
         { lbl: "BOUNTIES PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "all-time · total dist " + Math.round(pools.totalDistributedEth || 0) + " ETH", ic: "art/icons/throne.png" },
-      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
+      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
       + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
+      wkCd();
+      drawSpark();
     }
     if (hall && (hall.topsE || hall.tops)) {
       HALL = hall;
@@ -886,6 +916,42 @@ async function loadData() {
 }
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
+
+const wkCd = () => {
+  const el = $("wkReset");
+  if (!el || !POOLS || !POOLS.weekEnd) return;
+  const ms = Date.parse(POOLS.weekEnd) - Date.now();
+  if (ms <= 0) { el.textContent = "PAYING OUT…"; return; }
+  const d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / 60000);
+  el.textContent = (d ? d + "d " : "") + h + "h " + m + "m";
+};
+setInterval(wkCd, 30000);
+
+function drawSpark() {
+  const cv = $("spark");
+  if (!cv || !PHIST || !PHIST.points || PHIST.points.length < 2) return;
+  $("sparkWrap").hidden = false;
+  const W = Math.max(300, cv.clientWidth) * 2, H = 120;
+  cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  const pts = PHIST.points, ws = pts.map(p => p.w);
+  const mn = Math.min(...ws), mx = Math.max(...ws);
+  g.clearRect(0, 0, W, H);
+  g.strokeStyle = "rgba(245,197,66,.25)"; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(4, H - 8); g.lineTo(W - 4, H - 8); g.stroke();
+  g.strokeStyle = "#f5c542"; g.lineWidth = 3; g.beginPath();
+  pts.forEach((p, i) => {
+    const x = i / (pts.length - 1) * (W - 8) + 4;
+    const y = H - 10 - ((p.w - mn) / ((mx - mn) || 1)) * (H - 28);
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  });
+  g.stroke();
+  g.fillStyle = "#a49cb8"; g.font = "22px VT323, monospace"; g.textAlign = "left";
+  g.fillText("max $" + Math.round(mx).toLocaleString("en-US"), 8, 20);
+  g.fillText("min $" + Math.round(mn).toLocaleString("en-US"), 8, H - 14);
+  g.textAlign = "right";
+  g.fillText(pts.length + " samples", W - 8, 20);
+}
 
 /* ═══════════════ BACKGROUND LOOT SCATTER (seeded, decorative) ═══════════════ */
 (function scatter() {
@@ -918,6 +984,10 @@ setInterval(loadData, 5 * 60 * 1000);
   }
   host.innerHTML = html;
 })();
+
+// deep link: ?addr=0x… prints the receipt straight away
+const qa = (new URLSearchParams(location.search).get("addr") || "").trim();
+if (/^0x[0-9a-fA-F]{40}$/.test(qa)) { $("addr").value = qa; run(qa); }
 </script>
 </body>
 </html>
