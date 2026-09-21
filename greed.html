@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%BE%3C/text%3E%3C/svg%3E">
 <title>PROOF OF GREED — Maze of Gains lifetime receipt</title>
 <meta name="description" content="Paste your wallet. Get your real lifetime Maze of Gains receipt from the Abstract chain: keys fed, cash out, maze hits, NET. Not financial advice.">
 <meta property="og:title" content="PROOF OF GREED — your Maze of Gains receipt">
@@ -13,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
 :root{
-  --bg:#0d0b14; --panel:#141122; --line:#2e2848; --text:#ece9f4; --muted:#a49cb8;
+  --bg:#0d0b14; --panel:#141122; --line:#2e2848; --text:#ece9f4; --muted:#b4acc8;
   --gold:#f5c542; --green:#6ee7a0; --red:#ff7a7a; --violet:#9d8df1; --pink:#f06ba8;
   --px:'Press Start 2P', monospace; --term:'VT323', 'Courier New', monospace;
 }
@@ -153,7 +154,7 @@ canvas{width:100%; height:auto; display:block}
 #statsWrap{display:flex; flex-direction:column; gap:12px}
 .stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
 .stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em}
-.stat .val{font-family:var(--px); font-size:13px; color:var(--gold); margin-top:9px; line-height:1.4}
+.stat .val{font-family:var(--px); font-size:13px; color:var(--gold); margin-top:9px; line-height:1.4; white-space:nowrap}
 .stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
 .feed{display:flex; flex-direction:column; gap:8px}
 .fitem{
@@ -180,7 +181,7 @@ footer{
 }
 footer a{color:var(--violet); text-decoration:none}
 footer a:hover{text-decoration:underline}
-footer code{font-family:var(--term); font-size:16px; color:var(--text)}
+footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace; font-size:15px; letter-spacing:.01em; color:var(--text)}
 .hidden{display:none !important}
 [hidden]{display:none !important}
 @media (max-width:640px){
@@ -193,11 +194,11 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
   #receiptWrap{overflow-x:auto}
-  #receiptWrap canvas{width:100%}
+  #receiptWrap canvas{min-width:600px; width:600px}
   .actions{flex-direction:column; align-items:stretch}
 }
 #status:empty{display:none}
-.hrow .r{color:#8a82a8}
+.hrow .r{color:#9c94bc}
 .hall-note{font-size:17px}
 .receipt-legend{font-size:17px}
 .stat .sub{font-size:17px}
@@ -266,7 +267,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 
   <section class="livebox" id="hallBox" hidden>
     <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits — Deed Season blocks only. free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
+    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits · the boards follow the active window (Deed Season / lifetime). free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
     <div class="hall" id="hall"></div>
   </section>
 
@@ -509,6 +510,7 @@ function drawReceipt(pl) {
   if (pl.wkShare != null && pl.wkShare > 0) {
     L.push({ k: "gap", h: 10 });
     L.push({ k: "center", t: "WHERE THE REST COMES BACK (WEEK #" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
+    L.push({ k: "row", l: "  THIS WEEK FED / HITS / CASHED", r: `${money(pl.wk.fed)} / ${money(pl.wk.hits)} / ${money(pl.wk.cashed)}` });
     L.push({ k: "row", l: "  EST. THU POOL CUT (~70% OF KEYS RUN)", r: "~" + money(pl.wkShare), accent: GOLD });
     L.push({ k: "row", l: "  PROJECTED CASH+POOL IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
     L.push({ k: "center", t: "pool = 70% of key spend, paid by treasure share - free-key treasure dilutes - corn/silo/raffle see in-game", f: `15px ${TERM}`, c: MUT, dy: 4 });
@@ -778,7 +780,6 @@ async function run(wallet, force = false) {
     statusEl.className = "";
     const n = pl.nDep + pl.nWd + pl.nWin;
     statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposit${pl.nDep === 1 ? "" : "s"}, ${pl.nWin} hit${pl.nWin === 1 ? "" : "s"}, ${pl.nWd} cash-out${pl.nWd === 1 ? "" : "s"} - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
-    if (sampleNote) { statusEl.textContent += " · sample wallet - paste yours to print your own"; sampleNote = false; }
     $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     console.error(e);
@@ -892,7 +893,7 @@ async function liveTick() {
     const head = parseInt(await rpc("eth_blockNumber", []), 16);
     const from = head - DAY_BLOCKS; // ~24h
     const logs = (await getLogsChunked({ address: CFG.VAULT }, from, head))
-      .filter(l => (l.topics[0] === CFG.SIG.DEP || l.topics[0] === CFG.SIG.WD || l.topics[0] === CFG.SIG.WIN) && l.topics[1]);
+      .filter(l => (l.topics[0] === CFG.SIG.DEPOSIT || l.topics[0] === CFG.SIG.WITHDRAW || l.topics[0] === CFG.SIG.WIN) && l.topics[1]);
     const by = sig => logs.filter(l => l.topics[0] === sig);
     const dep = by(CFG.SIG.DEPOSIT), wd = by(CFG.SIG.WITHDRAW), win = by(CFG.SIG.WIN);
     const sum = a => a.reduce((x, l) => x + usd6(word(l, 0)), 0);
@@ -920,7 +921,6 @@ async function liveTick() {
     ageEl.textContent = "feed offline — retrying…";
   }
 }
-liveTick();
 (function loopLive() { Promise.resolve(liveTick()).finally(() => setTimeout(loopLive, 45000)); })();
 
 /* ═══════════════ BOT-FED DATA (GitHub Actions → data/*.json; skipped on file://) ═══════════════ */
@@ -987,7 +987,7 @@ const wkCd = () => {
   const ms = Date.parse(POOLS.weekEnd) - Date.now();
   if (ms <= 0) { el.textContent = "PAYING OUT…"; return; }
   const d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000), m = Math.floor(ms % 3600000 / 60000);
-  el.textContent = (d ? d + "d " : "") + h + "h " + m + "m";
+  el.textContent = (d ? d + "d " : "") + String(h).padStart(2, "0") + "h " + String(m).padStart(2, "0") + "m";
 };
 setInterval(wkCd, 30000);
 
@@ -1051,15 +1051,9 @@ function drawSpark() {
   host.innerHTML = html;
 })();
 
-// deep link: ?addr=0x… prints the receipt straight away; otherwise auto-print a sample so the first screen sells the tool
-let sampleNote = false;
+// deep link: ?addr=0x… prints the receipt straight away
 const qa = (new URLSearchParams(location.search).get("addr") || "").trim();
 if (/^0x[0-9a-fA-F]{40}$/.test(qa)) { $("addr").value = qa; run(qa); }
-else {
-  sampleNote = true;
-  $("addr").value = "0x28cfe81381060ea23d7baa72b51b7116f99d9bb1";
-  run("0x28cfe81381060ea23d7baa72b51b7116f99d9bb1");
-}
 </script>
 </body>
 </html>
