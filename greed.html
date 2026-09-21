@@ -505,10 +505,15 @@ function drawReceipt(pl) {
   L.push({ k: "rule" });
   L.push({ k: "gap", h: 8 });
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
-  L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
-  if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
-  L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
+  if (pl.fed < 0.005) {
+    L.push({ k: "center", t: "NO ON-CHAIN FED IN THIS WINDOW", f: `17px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: "keys came cross-chain or server-side - invisible here", f: `16px ${TERM}`, c: MUT, dy: 2 });
+  } else {
+    L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
+    if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
+    L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
+  }
   L.push({ k: "gap", h: 6 });
   L.push({ k: "center", t: M ? "MAZE CREDITED (NOT CASH YET)" : "WHAT THE MAZE CREDITED (NOT CASH YET)", f: `18px ${TERM}`, c: MUT, sp: 3 });
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
@@ -550,7 +555,7 @@ function drawReceipt(pl) {
       case "row": return it.big ? 38 : 30;
       case "rule": return 22;
       case "net": return 78;
-      case "stampzone": return 132;
+      case "stampzone": return 152;
       case "barcode": return 76;
     }
   };
@@ -655,7 +660,7 @@ function drawReceipt(pl) {
       // secondary stamp: BOUNTY CLUB for a >=$500 hit
       if (pl.biggest && pl.biggest.usd >= 500) {
         g.save();
-        g.translate(M ? 112 : 152, cyy + 54);
+        g.translate(cx - stw / 2 + Math.round(94 * (M ? RF : 1)), cyy + 62);
         if (M) g.scale(RF, RF);
         g.globalAlpha = 0.9; g.strokeStyle = GOLD; g.lineWidth = 3;
         g.strokeRect(-86, -21, 172, 42);
@@ -668,7 +673,7 @@ function drawReceipt(pl) {
       // sprite cameo on the paper (cropped to content, calibrated per sprite)
       const spr = SPRC[v.sprite] || SPR[v.sprite];
       if (spr && spr.complete && spr.naturalWidth) {
-        const sh = REC_H[v.sprite] || 80, sw = sh * spr.naturalWidth / spr.naturalHeight;
+        const sh = (REC_H[v.sprite] || 80) * (M ? 0.66 : 1), sw = sh * spr.naturalWidth / spr.naturalHeight;
         g.save();
         g.globalAlpha = 0.95;
         if (v.flip) { g.translate(W - PX - sw / 2 - 4, cyy + 10); g.scale(-1, 1); g.drawImage(spr, -sw / 2, -sh / 2, sw, sh); }
