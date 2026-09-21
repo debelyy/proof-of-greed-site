@@ -257,7 +257,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE</div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE VALOR KEY BUYS, CLAIMS & DROPS ARE INVISIBLE · CROSS-CHAIN (ROBINHOOD) BUYS HIT THE SHOP AND ARE COUNTED</div>
     <div class="actions">
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
@@ -291,7 +291,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
   Source of truth: raw event logs of the <code>key shop 0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03</code> (KeysPurchased — paid in USDC or ETH) and <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> (VALOR top-ups, cash-outs, maze hits) on Abstract (chain 2741), block 60 015 914 → head ·
   <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
-  Invisible by nature: keys obtained outside these two contracts leave no log here (server-side spends, claims, drops) — e.g. wallet <code>0x28cf…9bb1</code> shows $17 on-chain fed against $9.6k cashed; the difference never passed through the vault or the shops. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
+  Invisible by nature: keys bought server-side with VALOR (won VALOR reinvested included), expedition/arcade claims, drops and marketplace settlements leave no log here — e.g. wallet <code>0x28cf…9bb1</code>: $17 on-chain fed, $11.6k wins credited, $9.6k cashed; the VALOR→keys leg never touches a contract. Cross-chain (Robinhood/Relay) buys DO hit the shop via buyKeysFor and are counted. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -309,7 +309,7 @@ setTimeout(() => {
 const CFG = {
   RPC: "https://api.mainnet.abs.xyz",
   VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
-  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop + legacy ETH shop (0.001 ETH/key, blocks 60.0M→~83M)
+  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, 60.0M→77.9M); full-chain sig scan 21.09: no third emitter
   DEPLOY_BLOCK: 60015914,
   SIG: {
     DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw=usdc*100) — VALOR top-up, NOT keys
@@ -508,7 +508,7 @@ function drawReceipt(pl) {
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
   if (pl.fed < 0.005) {
     L.push({ k: "center", t: "NO ON-CHAIN FED IN THIS WINDOW", f: `17px ${TERM}`, c: MUT, dy: 2 });
-    L.push({ k: "center", t: "this receipt sees only vault & key-shop logs", f: `16px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: "VALOR key buys, claims & drops leave no chain trace", f: `16px ${TERM}`, c: MUT, dy: 2 });
   } else {
     L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
     if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
@@ -537,7 +537,7 @@ function drawReceipt(pl) {
   }
   L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS", f: `17px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · KEY SOURCES OUTSIDE THESE CONTRACTS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
+  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · SERVER-SIDE VALOR KEY BUYS & DROPS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
