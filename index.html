@@ -291,7 +291,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
   Source of truth: raw event logs of the <code>key shop 0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03</code> (KeysPurchased — paid in USDC or ETH) and <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> (VALOR top-ups, cash-outs, maze hits) on Abstract (chain 2741), block 60 015 914 → head ·
   <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
-  Invisible by nature: cross-chain buys (Robinhood/Relay) and server-side keys (free claims, drops, marketplace) never touch these contracts — that's how the $17 wallet <code>0x28cf…9bb1</code> cashed out $9.6k. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
+  Invisible by nature: keys obtained outside these two contracts leave no log here (server-side spends, claims, drops) — e.g. wallet <code>0x28cf…9bb1</code> shows $17 on-chain fed against $9.6k cashed; the difference never passed through the vault or the shops. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -508,7 +508,7 @@ function drawReceipt(pl) {
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
   if (pl.fed < 0.005) {
     L.push({ k: "center", t: "NO ON-CHAIN FED IN THIS WINDOW", f: `17px ${TERM}`, c: MUT, dy: 2 });
-    L.push({ k: "center", t: "keys came cross-chain or server-side - invisible here", f: `16px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: "this receipt sees only vault & key-shop logs", f: `16px ${TERM}`, c: MUT, dy: 2 });
   } else {
     L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
     if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
@@ -537,7 +537,7 @@ function drawReceipt(pl) {
   }
   L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS", f: `17px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · SERVER-SIDE & CROSS-CHAIN KEYS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
+  L.push({ k: "center", t: M ? "NET = CASHED - FED (SEE LEGEND BELOW)" : "NET = CASHED - FED · KEY SOURCES OUTSIDE THESE CONTRACTS INVISIBLE", f: `17px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
