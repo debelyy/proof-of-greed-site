@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,4 +31,5 @@ jobs:
           git config user.email "mog-data-bot@users.noreply.github.com"
           cp greed.html index.html
           git add data index.html
-          git diff --cached --quiet && echo "no data changes" || { git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"; git push; }
+          git diff --cached --quiet && echo "no data changes" || { git commit -m "data: $(date -u +%Y-%m-%dT%H:%MZ)"; git pull --rebase || true
+          git push; }

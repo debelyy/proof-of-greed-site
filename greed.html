@@ -7,7 +7,9 @@
 <meta name="description" content="Paste your wallet. Get your real lifetime Maze of Gains receipt from the Abstract chain: keys fed, cash out, maze hits, NET. Not financial advice.">
 <meta property="og:title" content="PROOF OF GREED — your Maze of Gains receipt">
 <meta property="og:description" content="Your lifetime MoG P&L, straight from the Abstract chain. Print your receipt.">
-<meta property="og:image" content="og.png">
+<meta property="og:image" content="https://debelyy.github.io/proof-of-greed-site/og.png">
+<meta property="og:url" content="https://debelyy.github.io/proof-of-greed-site/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <style>
 :root{
@@ -191,8 +193,16 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
   #receiptWrap{overflow-x:auto}
-  #receiptWrap canvas{min-width:600px; width:600px}
+  #receiptWrap canvas{width:100%}
+  .actions{flex-direction:column; align-items:stretch}
 }
+#status:empty{display:none}
+.hrow .r{color:#8a82a8}
+.hall-note{font-size:17px}
+.receipt-legend{font-size:17px}
+.stat .sub{font-size:17px}
+.pool-age{font-size:17px}
+.whatline{font-size:17px}
 @media (prefers-reduced-motion: reduce){
   .marquee .track, .floater, .cast img, .verdict-row img, .dot, .fitem, #receiptWrap, h1, #status.busy::after{animation:none !important}
 }
@@ -247,6 +257,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
     </div>
     <div class="actions">
       <button id="dl">DOWNLOAD PNG</button>
+      <button id="cpng" class="btn-ghost">COPY PNG</button>
       <button id="share" class="btn-ghost">COPY SHARE TEXT</button>
       <button id="again" class="btn-ghost">PRINT ANOTHER</button>
       <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
@@ -429,7 +440,8 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
 }
 
 function verdictOf(pl) {
-  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? "no trace in deed season… yet. the corn race ends 28.09." : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
+  const ended = Date.now() > CFG.EVENT.END_TS;
+  if (!pl.nDep && !pl.nWd && !pl.nWin) return { stamp: "TOURIST", color: "#8a8272", line: pl.scope === "DEED SEASON" ? (ended ? "no trace in deed season. the corn race ended 28.09." : "no trace in deed season… yet. the corn race ends 28.09.") : "the maze doesn't know you… yet. come back hungry.", sprite: "slime", flip: false };
   if (!pl.nWd && pl.nDep > 0) return { stamp: "ALL IN", color: "#4b3f8f", line: "your stack is still riding in the maze. bold. or forgotten.", sprite: "potmimic", flip: false };
   if (pl.biggest && pl.biggest.usd >= 1000 && pl.net >= 0) return { stamp: "HOUSE FAVORITE", color: "#2e7d4f", line: "jackalot whispers your name in his sleep.", sprite: "jackalot", flip: true };
   if (pl.net >= 500) return { stamp: "WHALE", color: "#2e7d4f", line: "the maze works for you now. respect.", sprite: "mediumslime", flip: true };
@@ -485,8 +497,8 @@ function drawReceipt(pl) {
   L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
-  if (pl.rankHits) {
-    L.push({ k: "row", l: "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
+  if (pl.rankHits && (pl.nDep || pl.nWd || pl.nWin)) {
+    if (pl.riding > 0.005) L.push({ k: "row", l: "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
   L.push({ k: "gap", h: 6 });
@@ -494,7 +506,7 @@ function drawReceipt(pl) {
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
-  if (pl.wkShare != null) {
+  if (pl.wkShare != null && pl.wkShare > 0) {
     L.push({ k: "gap", h: 10 });
     L.push({ k: "center", t: "WHERE THE REST COMES BACK (WEEK #" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
     L.push({ k: "row", l: "  EST. THU POOL CUT (~70% OF KEYS RUN)", r: "~" + money(pl.wkShare), accent: GOLD });
@@ -508,6 +520,7 @@ function drawReceipt(pl) {
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
   L.push({ k: "center", t: pl.wallet.toLowerCase(), f: `16px ${TERM}`, c: MUT, dy: 4 });
+  L.push({ k: "center", t: "print yours: " + location.host + " - #ProofOfGreed #DeedSeason", f: `16px ${TERM}`, c: MUT, dy: 6 });
   L.push({ k: "center", t: "verify: explorer.mainnet.abs.xyz - vault 0x2DDF-3BbA - not financial advice", f: `15px ${TERM}`, c: MUT, dy: 8 });
   L.push({ k: "gap", h: 20 });
 
@@ -696,7 +709,7 @@ const TAUNTS = [
   "hundreds of thousands of keys fed to me. show me yours.",
 ];
 let ti = 0;
-setInterval(() => { if ($("stage").classList.contains("hidden")) { ti = (ti + 1) % TAUNTS.length; $("taunt").textContent = TAUNTS[ti]; } }, 6000);
+setInterval(() => { if ($("stage").classList.contains("hidden") && !$("taunt").dataset.secret) { ti = (ti + 1) % TAUNTS.length; $("taunt").textContent = TAUNTS[ti]; } }, 6000);
 
 const STAGES = [
   "contacting the abstract chain…",
@@ -706,20 +719,24 @@ const STAGES = [
   "consulting sir jackalot about your decisions…",
 ];
 let stageTimer = null;
+let running = false;
 function busy(on) {
+  running = on;
   $("go").disabled = on;
+  clearInterval(stageTimer);
   if (on) {
     let i = 0;
     statusEl.className = "busy";
     statusEl.textContent = STAGES[0];
     stageTimer = setInterval(() => { i = Math.min(i + 1, STAGES.length - 1); statusEl.textContent = STAGES[i]; }, 900);
-  } else { clearInterval(stageTimer); }
+  }
 }
 function fail(msg) { statusEl.className = "err"; statusEl.textContent = "x " + msg; }
 
 async function run(wallet, force = false) {
   wallet = wallet.trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) { fail("that's not an EVM address (need 0x + 40 hex)"); return; }
+  if (running) return;
   lastWallet = wallet;
   busy(true); $("stage").classList.add("hidden");
   try {
@@ -736,9 +753,6 @@ async function run(wallet, force = false) {
       pl.fieldN = act.length;
       pl.rankHits = act.filter(w => (isE ? w.hitsE : w.hits) > pl.wins).length + 1;
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
-      const t = isE ? HALL.totalsE : HALL.totals;
-      pl.luckField = t && t.fed ? t.hits / t.fed : 0;
-      pl.luck = pl.deposits > 0 ? pl.wins / pl.deposits : null;
       pl.riding = Math.max(0, pl.deposits + pl.wins - pl.withdrawals);
       const hw = HALL.wallets[wallet.toLowerCase()];
       if (hw && POOLS && HALL.totalsWk && HALL.totalsWk.fed > 0) {
@@ -764,6 +778,7 @@ async function run(wallet, force = false) {
     statusEl.className = "";
     const n = pl.nDep + pl.nWd + pl.nWin;
     statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposit${pl.nDep === 1 ? "" : "s"}, ${pl.nWin} hit${pl.nWin === 1 ? "" : "s"}, ${pl.nWd} cash-out${pl.nWd === 1 ? "" : "s"} - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
+    if (sampleNote) { statusEl.textContent += " · sample wallet - paste yours to print your own"; sampleNote = false; }
     $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     console.error(e);
@@ -774,11 +789,13 @@ async function run(wallet, force = false) {
 function shareText() {
   if (!lastPL) return "";
   const p = lastPL;
+  const url = location.href.split("?")[0];
   if (!p.nDep && !p.nWd && !p.nWin)
-    return `No trace of me in the Maze of Gains. Yet. 🌽 #ProofOfGreed - print yours: ${location.href}`;
-  const hit = p.biggest ? ` - biggest hit ${money(p.biggest.usd)}` : "";
-  const sc = p.scope === "DEED SEASON" ? " (Deed Season)" : "";
-  return `I fed Maze of Gains ${money(p.deposits)} and cashed out ${money(p.withdrawals)}${hit}${sc}. NET ${money(p.net, true)} - my receipt 👇 #ProofOfGreed\nprint yours: ${location.href}`;
+    return `TOURIST · no trace in Maze of Gains yet 🌽 print yours: ${url} #ProofOfGreed #DeedSeason`;
+  const hook = `${verdictOf(p).stamp} · NET ${money(p.net, true)} (${p.scope === "DEED SEASON" ? "Deed Season" : "lifetime"})`;
+  const rank = p.rankHits ? ` · #${p.rankHits} hits of ${p.fieldN} wallets` : "";
+  const hit = p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "";
+  return `${hook}${rank}${hit} - fed ${money(p.deposits)}, cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
 
 $("go").addEventListener("click", () => run($("addr").value));
@@ -825,8 +842,30 @@ $("dl").addEventListener("click", e => {
 });
 $("share").addEventListener("click", async e => {
   const t = shareText();
-  try { await navigator.clipboard.writeText(t); e.target.textContent = "COPIED ✓"; } catch { prompt("copy manually:", t); }
+  try {
+    const b = await new Promise(r => $("cv").toBlob(r, "image/png"));
+    const f = b && new File([b], "proof-of-greed.png", { type: "image/png" });
+    if (f && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: t }); return; }
+    await navigator.clipboard.writeText(t); e.target.textContent = "COPIED ✓";
+  } catch {
+    try { await navigator.clipboard.writeText(t); e.target.textContent = "COPIED ✓"; } catch { prompt("copy manually:", t); }
+  }
   setTimeout(() => (e.target.textContent = "COPY SHARE TEXT"), 1600);
+});
+$("cpng").addEventListener("click", async e => {
+  try {
+    const b = await new Promise(r => $("cv").toBlob(r, "image/png"));
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": b })]);
+    e.target.textContent = "COPIED ✓";
+  } catch { e.target.textContent = "NOT SUPPORTED"; }
+  setTimeout(() => (e.target.textContent = "COPY PNG"), 1600);
+});
+if (!navigator.clipboard || !window.ClipboardItem) $("cpng").style.display = "none";
+$("cv").addEventListener("click", () => {
+  try {
+    const w = window.open("");
+    if (w) w.document.write(`<body style="margin:0;background:#0d0b14"><img src="${$("cv").toDataURL("image/png")}" style="width:100%">`);
+  } catch {}
 });
 
 (async function tick() {
@@ -852,7 +891,8 @@ async function liveTick() {
   try {
     const head = parseInt(await rpc("eth_blockNumber", []), 16);
     const from = head - DAY_BLOCKS; // ~24h
-    const logs = await getLogsChunked({ address: CFG.VAULT }, from, head);
+    const logs = (await getLogsChunked({ address: CFG.VAULT }, from, head))
+      .filter(l => (l.topics[0] === CFG.SIG.DEP || l.topics[0] === CFG.SIG.WD || l.topics[0] === CFG.SIG.WIN) && l.topics[1]);
     const by = sig => logs.filter(l => l.topics[0] === sig);
     const dep = by(CFG.SIG.DEPOSIT), wd = by(CFG.SIG.WITHDRAW), win = by(CFG.SIG.WIN);
     const sum = a => a.reduce((x, l) => x + usd6(word(l, 0)), 0);
@@ -881,7 +921,7 @@ async function liveTick() {
   }
 }
 liveTick();
-setInterval(liveTick, 45000);
+(function loopLive() { Promise.resolve(liveTick()).finally(() => setTimeout(loopLive, 45000)); })();
 
 /* ═══════════════ BOT-FED DATA (GitHub Actions → data/*.json; skipped on file://) ═══════════════ */
 const kUsd = v => v >= 1000 ? "$" + (v / 1000).toLocaleString("en-US", { maximumFractionDigits: v >= 100000 ? 0 : 1 }) + "k" : money(v);
@@ -916,15 +956,19 @@ async function loadData() {
     if (hist) PHIST = hist;
     if (pools) {
       const lw = PHIST && PHIST.lastWeek;
+      const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
-      $("poolStats").innerHTML = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "paid in VALOR · 100 VALOR = $1 · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
+      const poolCards = [
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "paid in VALOR · 100 VALOR = $1 · week #" + wn + (lw ? "" : " · reset " + resetStr), ic: "art/icons/corn.png" },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out pro-rata to keys", ic: "art/icons/evekey.png", vid: "wkReset" },
-        { lbl: "LAST WEEK PAID OUT", val: lw ? kUsd(lw.paidUsd) : "NO DATA YET", sub: lw ? "week #" + lw.week + " at reset" : "first tracked reset: " + resetStr, ic: "art/icons/amber.png" },
+      ];
+      if (lw) poolCards.push({ lbl: "LAST WEEK PAID OUT", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " at reset", ic: "art/icons/amber.png" });
+      poolCards.push(
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "Jackalot bounty jackpot · gem cap $2,100 · throne pool = server state, not public", ic: "art/icons/jackpot.png" },
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH distributed all-time", ic: "art/icons/throne.png" },
-      ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
+      );
+      $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
+      + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s · global corn & players: <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a> (off-chain)</div>`;
       wkCd();
       drawSpark();
     }
@@ -935,7 +979,7 @@ async function loadData() {
   } catch {}
 }
 loadData();
-setInterval(loadData, 5 * 60 * 1000);
+setInterval(loadData, 10 * 60 * 1000);
 
 const wkCd = () => {
   const el = $("wkReset");
@@ -949,12 +993,14 @@ setInterval(wkCd, 30000);
 
 function drawSpark() {
   const cv = $("spark");
-  if (!cv || !PHIST || !PHIST.points || PHIST.points.length < 8) return;
+  if (!cv || !PHIST || !PHIST.points) return;
+  const pts = PHIST.points.filter(p => !p.wk || p.wk === PHIST.week);
+  if (pts.length < 8) return;
   $("sparkWrap").hidden = false;
   const W = Math.max(300, cv.clientWidth) * 2, H = 120;
   cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
-  const pts = PHIST.points, ws = pts.map(p => p.w);
+  const ws = pts.map(p => p.w);
   const mn = Math.min(...ws), mx = Math.max(...ws);
   g.clearRect(0, 0, W, H);
   g.strokeStyle = "rgba(245,197,66,.25)"; g.lineWidth = 2;
@@ -1005,9 +1051,15 @@ function drawSpark() {
   host.innerHTML = html;
 })();
 
-// deep link: ?addr=0x… prints the receipt straight away
+// deep link: ?addr=0x… prints the receipt straight away; otherwise auto-print a sample so the first screen sells the tool
+let sampleNote = false;
 const qa = (new URLSearchParams(location.search).get("addr") || "").trim();
 if (/^0x[0-9a-fA-F]{40}$/.test(qa)) { $("addr").value = qa; run(qa); }
+else {
+  sampleNote = true;
+  $("addr").value = "0x28cfe81381060ea23d7baa72b51b7116f99d9bb1";
+  run("0x28cfe81381060ea23d7baa72b51b7116f99d9bb1");
+}
 </script>
 </body>
 </html>
