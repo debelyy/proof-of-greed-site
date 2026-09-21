@@ -254,11 +254,20 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   <section class="livebox">
     <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · on-chain only · 45s</span></div>
     <div class="feed" id="feed"></div>
+  </section>
+
+  <section class="livebox">
     <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST ~24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
     <div class="stats" id="stats"></div>
     <div class="pool-age">chain-live · server-side key buys &amp; claims are invisible on-chain and not counted here</div>
     <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · OFF-CHAIN BOT SNAPSHOT (SEE TIMESTAMP)</div>
     <div class="stats" id="poolStats"></div>
+  </section>
+
+  <section class="livebox" id="hallBox" hidden>
+    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
+    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − ON-CHAIN FED (server-side VALOR keys invisible) · HITS = bounty/gem/throne credits.</div>
+    <div class="hall" id="hall"></div>
   </section>
 
   <section id="stage" class="hidden">
@@ -275,12 +284,6 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <button id="again" class="btn-ghost">PRINT ANOTHER</button>
       <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
     </div>
-  </section>
-
-  <section class="livebox" id="hallBox" hidden>
-    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − ON-CHAIN FED (server-side VALOR keys invisible) · HITS = bounty/gem/throne credits.</div>
-    <div class="hall" id="hall"></div>
   </section>
 </main>
 
@@ -917,7 +920,7 @@ async function liveTick() {
     const sum = (a, f = l => usd6(word(l, 0))) => a.reduce((x, l) => x + f(l), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
-      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · funds wins & cash-outs · ops sweeps included", ic: "art/icons/treasure.png" },
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png" },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png" },
       { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
       { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png" },
@@ -995,12 +998,12 @@ async function loadData() {
       const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "70% of week key spend · server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
-        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · split pro-rata by keys", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset" },
       ];
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png" });
       poolCards.push(
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "18% of arcade key spend · server-side VALOR ledger", ic: "art/icons/jackpot.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png" },
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
       );
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
