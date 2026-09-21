@@ -125,7 +125,7 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .whatline a{color:var(--violet); text-decoration:none}
 .whatline a:hover{text-decoration:underline}
 .spark-head{font-family:var(--px); font-size:9px; color:var(--violet); margin-top:14px; letter-spacing:.08em}
-#spark{width:100%; height:60px; display:block}
+#spark{width:100%; height:70px; display:block}
 .chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
 .chip{
   font-family:var(--term); font-size:15px; color:var(--violet); background:#0a0813; cursor:pointer;
@@ -161,7 +161,7 @@ canvas{width:100%; height:auto; display:block}
 .dot.gold{background:var(--gold)}
 .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px}
 #statsWrap{display:flex; flex-direction:column; gap:12px}
-.stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
+.stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px; min-height:148px}
 .stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em; padding-right:26px}
 .stat .val{font-family:var(--px); font-size:clamp(10px,3.3vw,13px); color:var(--gold); margin-top:9px; line-height:1.4; white-space:nowrap}
 .stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
@@ -202,6 +202,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   .fitem .verb{display:none}
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
+  .stat{min-height:0}
   .chip{padding:9px 12px; font-size:16px}
   .actions{flex-direction:column; align-items:stretch}
 }
@@ -281,7 +282,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · DATA-BOT SNAPSHOT (SEE TIMESTAMP)</div>
     <div class="stats" id="poolStats"></div>
     <div id="sparkWrap" hidden>
-      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN</div>
+      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN · <span id="sparkN"></span></div>
       <canvas id="spark"></canvas>
     </div>
     <div class="live-head"><span class="dot"></span>CHAIN · LAST 24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
@@ -930,10 +931,10 @@ async function liveTick() {
     const sum = (a, f = l => usd6(word(l, 0))) => a.reduce((x, l) => x + f(l), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
-      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now", ic: "art/icons/treasure.png" },
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC payout reserve now · refilled by treasury, drained by cash-outs", ic: "art/icons/treasure.png" },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png" },
       { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
-      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones", ic: "art/icons/gem.png" },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png" },
     ];
     $("stats").innerHTML = cards.map(c =>
       `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
@@ -1008,7 +1009,7 @@ async function loadData() {
       const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side pool in VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "70% of week key spend · server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · paid pro-rata to Treasure (keys multiply it)", ic: "art/icons/evekey.png", vid: "wkReset" },
       ];
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png" });
@@ -1017,7 +1018,7 @@ async function loadData() {
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
       );
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">pools &amp; jackpots ← playmog API (off-chain) · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a> · as of ${(pools.t || "").slice(11, 16)} UTC</div>`;
+      + `<div class="pool-age">pools &amp; jackpots ← playmog API (off-chain) · bot snapshot as of ${(pools.t || "").slice(11, 16)} UTC — chain cards below are live (45s) · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
       drawSpark();
     }
@@ -1047,7 +1048,7 @@ function drawSpark() {
   const pts = PHIST.points.filter(p => !p.wk || p.wk === PHIST.week);
   if (pts.length < 8) return;
   $("sparkWrap").hidden = false;
-  const W = Math.max(300, cv.clientWidth) * 2, H = 120;
+  const W = Math.max(300, cv.clientWidth) * 2, H = 140;
   cv.width = W; cv.height = H;
   const g = cv.getContext("2d");
   const ws = pts.map(p => p.w);
@@ -1058,15 +1059,14 @@ function drawSpark() {
   g.strokeStyle = "#f5c542"; g.lineWidth = 3; g.beginPath();
   pts.forEach((p, i) => {
     const x = i / (pts.length - 1) * (W - 8) + 4;
-    const y = H - 10 - ((p.w - mn) / ((mx - mn) || 1)) * (H - 28);
+    const y = H - 12 - ((p.w - mn) / ((mx - mn) || 1)) * (H - 34);
     i ? g.lineTo(x, y) : g.moveTo(x, y);
   });
   g.stroke();
-  g.fillStyle = "#a49cb8"; g.font = "22px VT323, monospace"; g.textAlign = "left";
-  g.fillText("max $" + Math.round(mx).toLocaleString("en-US"), 8, 20);
-  g.fillText("min $" + Math.round(mn).toLocaleString("en-US"), 8, H - 14);
-  g.textAlign = "right";
-  g.fillText(pts.length + " samples", W - 8, 20);
+  g.fillStyle = "#a49cb8"; g.font = "26px VT323, monospace"; g.textAlign = "left";
+  g.fillText("max $" + Math.round(mx).toLocaleString("en-US"), 8, 24);
+  g.fillText("min $" + Math.round(mn).toLocaleString("en-US"), 8, H - 16);
+  const sn = document.getElementById("sparkN"); if (sn) sn.textContent = pts.length + " samples";
 }
 
 /* ═══════════════ BACKGROUND LOOT SCATTER (seeded, decorative) ═══════════════ */
