@@ -109,6 +109,13 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .scope-ic{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.9}
 .chip-ic{width:16px; height:16px; image-rendering:pixelated; vertical-align:-3px; margin-right:7px}
 .stat{position:relative}
+.why{cursor:help; border-bottom:1px dotted var(--muted); position:relative}
+.why:hover::after{
+  content:attr(data-why); position:absolute; left:0; top:calc(100% + 6px); z-index:40;
+  width:max-content; max-width:260px; background:#0a0813; border:2px solid var(--line);
+  color:var(--muted); font-family:var(--term); font-size:15px; line-height:1.35; letter-spacing:0;
+  padding:8px 10px; box-shadow:4px 4px 0 rgba(0,0,0,.5); white-space:normal; text-align:left;
+}
 .pool-age{grid-column:1/-1; font-size:15px; color:var(--muted); text-align:right; margin-top:-4px}
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
@@ -252,7 +259,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   </section>
 
   <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · only what the chain sees · every 45s</span></div>
+    <div class="live-head"><span class="dot gold"></span><span class="why" data-why="Latest on-chain moves only. Game-server actions (server key buys, claims, drops) never appear here - no tracker can see them.">TAPE OF THE MAZE</span><span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · only what the chain sees · every 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
 
@@ -265,7 +272,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   </section>
 
   <section class="livebox" id="hallBox" hidden>
-    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
+    <div class="live-head"><span class="dot gold"></span><span class="why" data-why="Rankings count only money the chain saw: cashed out minus fed in. Keys bought inside the game server are invisible to everyone, so nets here are on-chain only.">HALL OF GREED</span><span class="age" id="hallAge"></span></div>
     <div class="hall-note">boards follow the chosen window (season / lifetime) · net = cashed out minus fed in, counting only what the chain saw — keys bought inside the game server are invisible to everyone · hits = bounty/gem/throne credits</div>
     <div class="hall" id="hall"></div>
   </section>
@@ -920,13 +927,13 @@ async function liveTick() {
     const sum = (a, f = l => usd6(word(l, 0))) => a.reduce((x, l) => x + f(l), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
-      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png" },
-      { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png" },
-      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
-      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png" },
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png", why: "USDC sitting in the vault contract right now, read from the chain. Not only players money: the game treasury refills it and ops sweeps leave it too." },
+      { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png", why: "Key buys and top-ups the chain saw in the last ~24 hours (window measured live, plus-minus 1%). Keys bought inside the game server never touch the chain, so they can not be here." },
+      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png", why: "Exact on-chain USDC withdrawals from the vault in the last ~24 hours (window plus-minus 1%)." },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. The big returns - Thursday pool share and ETH jackpots - are separate, and partly server-side." },
     ];
     $("stats").innerHTML = cards.map(c =>
-      `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
+      `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
     const feed = [
       ...logs.map(l => ({ l, kind: l.topics[0] === CFG.SIG.WIN ? "win" : l.topics[0] === CFG.SIG.WITHDRAW ? "wd" : "dep" })),
       ...keys24.map(l => ({ l, kind: "key" })),
@@ -998,15 +1005,15 @@ async function loadData() {
       const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
-        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified; can lag by minutes." },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
       ];
-      if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png" });
+      if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png", why: "Snapshot of the previous week pool at reset, stored by our bot when the week flipped." });
       poolCards.push(
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png" },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total." },
       );
-      $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
+      $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
       + `<div class="pool-age">these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
