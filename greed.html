@@ -252,21 +252,21 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   </section>
 
   <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · on-chain only · 45s</span></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · only what the chain sees · every 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
 
   <section class="livebox">
-    <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST ~24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
+    <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST ~24 HOURS · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
     <div class="stats" id="stats"></div>
-    <div class="pool-age">chain-live · server-side key buys &amp; claims are invisible on-chain and not counted here</div>
-    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · OFF-CHAIN BOT SNAPSHOT (SEE TIMESTAMP)</div>
+    <div class="pool-age">counted live from the Abstract chain, last ~24 hours · keys bought inside the game server (VALOR, free claims, drops) never touch the chain and can't appear here — no tracker can see them</div>
+    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · game-server numbers, copied by our bot (time below)</div>
     <div class="stats" id="poolStats"></div>
   </section>
 
   <section class="livebox" id="hallBox" hidden>
     <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − ON-CHAIN FED (server-side VALOR keys invisible) · HITS = bounty/gem/throne credits.</div>
+    <div class="hall-note">boards follow the chosen window (season / lifetime) · net = cashed out minus fed in, counting only what the chain saw — keys bought inside the game server are invisible to everyone · hits = bounty/gem/throne credits</div>
     <div class="hall" id="hall"></div>
   </section>
 
@@ -276,7 +276,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE KEY CREDITS (VALOR BUYS, CLAIMS, DROPS) ARE INVISIBLE · ABSTRACT CHAIN ONLY — ROBINHOOD-CHAIN BUYS NOT FOUND ON-CHAIN HERE</div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>KEYS BOUGHT INSIDE THE GAME SERVER ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN — NO ROBINHOOD PURCHASES FOUND ON IT</div>
     <div class="actions">
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
@@ -290,7 +290,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 <footer>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
   Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
-  Server-side key credits (VALOR buys, claims, drops) leave no on-chain log · this site reads the Abstract chain only — Robinhood-chain buys left no attributable trace here · legacy ETH-shop keys counted at $1 face.<br>
+  Money spent inside the game server (VALOR key buys, free claims, drops) leaves no trace on the chain — invisible to everyone, us included. We read only the Abstract chain; we found no Robinhood-chain purchases on it. Old ETH-shop keys count as $1 each.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -505,7 +505,7 @@ function drawReceipt(pl) {
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
   if (pl.fed < 0.005) {
-    L.push({ k: "center", t: M ? "NO ON-CHAIN FED - VALOR KEYS & DROPS LEAVE NO TRACE" : "NO ON-CHAIN FED IN THIS WINDOW - VALOR KEY BUYS, CLAIMS & DROPS LEAVE NO TRACE", f: `16px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: M ? "NO ON-CHAIN MONEY - SERVER KEYS LEAVE NO TRACE" : "NO MONEY SEEN ON CHAIN THIS WINDOW - GAME-SERVER KEYS LEAVE NO TRACE", f: `16px ${TERM}`, c: MUT, dy: 2 });
   } else {
     L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
     if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
@@ -527,7 +527,7 @@ function drawReceipt(pl) {
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   L.push({ k: "gap", h: 8 });
-  L.push({ k: "center", t: M ? "FED = KEYS+TOP-UPS · NET = CASHED-FED · ABSTRACT ONLY" : "FED = KEY BUYS + TOP-UPS · NET = CASHED - FED · OFF-LOG KEYS INVISIBLE · ABSTRACT ONLY", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: M ? "ABSTRACT CHAIN ONLY · NET = CASHED - FED" : "FED = KEYS+TOP-UPS ON ABSTRACT · NET = CASHED-FED · SERVER KEYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "gap", h: 12 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -1007,7 +1007,7 @@ async function loadData() {
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
       );
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">pools &amp; jackpots ← playmog API (off-chain) · bot snapshot as of ${(pools.t || "").slice(11, 16)} UTC — chain cards below are live (45s) · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
+      + `<div class="pool-age">these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
     if (hall && (hall.topsE || hall.tops)) {
