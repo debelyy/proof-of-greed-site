@@ -257,20 +257,17 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     </div>
   </section>
 
-  <section id="stage" class="hidden">
-    <div id="receiptWrap"><canvas id="cv"></canvas></div>
-    <div class="verdict-row">
-      <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
-      <div class="bubble" id="verdictLine"></div>
+  <section class="livebox">
+    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · DATA-BOT SNAPSHOT (SEE TIMESTAMP)</div>
+    <div class="stats" id="poolStats"></div>
+    <div id="sparkWrap" hidden>
+      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN · <span id="sparkN"></span></div>
+      <canvas id="spark"></canvas>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE VALOR KEY BUYS, CLAIMS & DROPS ARE INVISIBLE · CROSS-CHAIN (ROBINHOOD) BUYS HIT THE SHOP AND ARE COUNTED</div>
-    <div class="actions">
-      <button id="dl">DOWNLOAD PNG</button>
-      <button id="cpng" class="btn-ghost">COPY IMAGE</button>
-      <button id="share" class="btn-ghost">COPY CAPTION</button>
-      <button id="again" class="btn-ghost">PRINT ANOTHER</button>
-      <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
-    </div>
+    <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST 24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · refreshes 45s</span></div>
+    <div class="feed" id="feed"></div>
   </section>
 
   <section class="livebox" id="hallBox" hidden>
@@ -279,24 +276,27 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     <div class="hall" id="hall"></div>
   </section>
 
-  <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · DATA-BOT SNAPSHOT (SEE TIMESTAMP)</div>
-    <div class="stats" id="poolStats"></div>
-    <div id="sparkWrap" hidden>
-      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED PER BOT RUN · <span id="sparkN"></span></div>
-      <canvas id="spark"></canvas>
+  <section id="stage" class="hidden">
+    <div id="receiptWrap"><canvas id="cv"></canvas></div>
+    <div class="verdict-row">
+      <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
+      <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="live-head"><span class="dot"></span>CHAIN · LAST 24H · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
-    <div class="stats" id="stats"></div>
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · refreshes 45s</span></div>
-    <div class="feed" id="feed"></div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE KEY CREDITS (VALOR BUYS, CLAIMS, DROPS) ARE INVISIBLE · ABSTRACT CHAIN ONLY — ROBINHOOD-CHAIN BUYS NOT FOUND ON-CHAIN HERE</div>
+    <div class="actions">
+      <button id="dl">DOWNLOAD PNG</button>
+      <button id="cpng" class="btn-ghost">COPY IMAGE</button>
+      <button id="share" class="btn-ghost">COPY CAPTION</button>
+      <button id="again" class="btn-ghost">PRINT ANOTHER</button>
+      <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
+    </div>
   </section>
 </main>
 
 <footer>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
   Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
-  Server-side keys (VALOR buys, claims, drops) leave no on-chain log · legacy ETH-shop keys counted at $1 face · cross-chain (Robinhood) buys hit the shop and are counted.<br>
+  Server-side key credits (VALOR buys, claims, drops) leave no on-chain log · this site reads the Abstract chain only — Robinhood-chain buys left no attributable trace here · legacy ETH-shop keys counted at $1 face.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -533,7 +533,7 @@ function drawReceipt(pl) {
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   L.push({ k: "gap", h: 8 });
-  L.push({ k: "center", t: M ? "FED = KEYS+TOP-UPS · NET = CASHED-FED" : "FED = KEY BUYS + TOP-UPS · NET = CASHED - FED · OFF-LOG KEYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: M ? "FED = KEYS+TOP-UPS · NET = CASHED-FED · ABSTRACT ONLY" : "FED = KEY BUYS + TOP-UPS · NET = CASHED - FED · OFF-LOG KEYS INVISIBLE · ABSTRACT ONLY", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "gap", h: 12 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -932,7 +932,7 @@ async function liveTick() {
     const sum = (a, f = l => usd6(word(l, 0))) => a.reduce((x, l) => x + f(l), 0);
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
-      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC payout reserve now · refilled by treasury, drained by cash-outs", ic: "art/icons/treasure.png" },
+      { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · funds wins & cash-outs · ops sweeps included", ic: "art/icons/treasure.png" },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png" },
       { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
       { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png" },
@@ -1011,11 +1011,11 @@ async function loadData() {
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
         { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "70% of week key spend · server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png" },
-        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · paid pro-rata to Treasure (keys multiply it)", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · split pro-rata by keys", ic: "art/icons/evekey.png", vid: "wkReset" },
       ];
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png" });
       poolCards.push(
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "jackalot jackpot only · gem cap $2,100 · throne server-side", ic: "art/icons/jackpot.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "18% of arcade key spend · server-side VALOR ledger", ic: "art/icons/jackpot.png" },
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png" },
       );
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
