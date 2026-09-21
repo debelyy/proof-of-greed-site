@@ -257,7 +257,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE VALOR KEY BUYS, CLAIMS & DROPS ARE INVISIBLE · CROSS-CHAIN (ROBINHOOD) BUYS HIT THE SHOP AND ARE COUNTED</div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>SERVER-SIDE VALOR KEY BUYS, CLAIMS & DROPS ARE INVISIBLE · CROSS-CHAIN (ROBINHOOD) BUYS HIT THE SHOP AND ARE COUNTED</div>
     <div class="actions">
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
@@ -269,7 +269,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 
   <section class="livebox" id="hallBox" hidden>
     <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − FED · HITS = bounty/gem/throne credits · full definitions in the legend under your receipt.</div>
+    <div class="hall-note">boards follow the active window (season / lifetime) · NET = CASHED − ON-CHAIN FED (server-side VALOR keys invisible) · HITS = bounty/gem/throne credits.</div>
     <div class="hall" id="hall"></div>
   </section>
 
@@ -519,7 +519,7 @@ function drawReceipt(pl) {
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
   if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
-    if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  STILL IN THE MAZE (UNCASHED)" : "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
+    if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
   L.push({ k: "gap", h: 4 });
@@ -527,11 +527,6 @@ function drawReceipt(pl) {
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
-  if (pl.wkShare != null && pl.wkShare > 0) {
-    L.push({ k: "gap", h: 6 });
-    L.push({ k: "row", l: M ? `  THU CUT (70% KEYS · WK#${pl.wkNum})` : `  EST. THU POOL CUT (70% OF WEEK KEY SPEND · WK #${pl.wkNum})`, r: "~" + money(pl.wkShare), accent: GOLD });
-    L.push({ k: "row", l: M ? "  EST. NET+CUT IF WEEK ENDED NOW" : "  ROUGH EST. NET+CUT IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
-  }
   L.push({ k: "gap", h: 8 });
   L.push({ k: "center", t: M ? "FED = KEYS+TOP-UPS · NET = CASHED-FED" : "FED = KEY BUYS + TOP-UPS · NET = CASHED - FED · OFF-LOG KEYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "gap", h: 12 });
@@ -775,14 +770,6 @@ async function run(wallet, force = false) {
       pl.rankHits = act.filter(w => (isE ? w.hitsE : w.hits) > pl.wins).length + 1;
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals);
-      const hw = HALL.wallets[wallet.toLowerCase()];
-      if (hw && POOLS && HALL.totalsWk && HALL.totalsWk.fed > 0) {
-        pl.wk = { fed: hw.wkFed || 0, hits: hw.wkHits || 0, cashed: hw.wkCashed || 0 };
-        // weekly pool = 70% of ALL players' key spend, paid pro-rata to treasure ⇒ proxy = 0.7 × your weekly KEY spend
-        pl.wkShare = 0.7 * (hw.wkKeys != null ? hw.wkKeys : hw.wkFed || 0);
-        pl.wkNum = HALL.week;
-        pl.projected = pl.net + pl.wkShare;
-      }
     }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
