@@ -116,6 +116,10 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .receipt-legend{font-size:15px; color:var(--muted); text-align:center; line-height:1.5}
 .hint{font-size:15px; color:var(--muted); text-align:center; letter-spacing:.02em; line-height:1.5}
 .hint span{display:inline-block; white-space:nowrap; margin:0 5px}
+.ptr{font-family:var(--px); font-size:9px; color:var(--gold); letter-spacing:.06em; text-align:center; line-height:1.6}
+.ptr.up{color:var(--violet)}
+@keyframes ptrblink{0%,60%{opacity:1} 61%,100%{opacity:.25}}
+.ptr .ar{animation:ptrblink 1.4s steps(1) infinite}
 #statusMore:empty{display:none}
 .whatline{margin:10px auto 0; font-size:16px; color:var(--muted); max-width:700px; line-height:1.55; letter-spacing:0}
 .whatline a{color:var(--violet); text-decoration:none}
@@ -235,16 +239,16 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
         <button id="scEvent" class="scope-btn on" type="button"><img class="scope-ic" src="art/icons/corn.png" alt="">DEED SEASON 17–28.09</button>
         <button id="scLife" class="scope-btn" type="button"><img class="scope-ic" src="art/icons/marble.png" alt="">LIFETIME</button>
       </div>
+      <div class="ptr"><span class="ar">▼</span> paste your in-game wallet (playmog profile → address)</div>
       <div class="row">
         <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="paste your 0x… wallet address">
         <button id="go">PRINT MY RECEIPT</button>
       </div>
-      <div class="hint"><span>1 · paste your in-game Abstract wallet</span> <span>2 · pick DEED SEASON or LIFETIME</span> <span>3 · PRINT MY RECEIPT → download or share</span></div>
+      <div class="ptr up"><span class="ar">▲</span> one click — and the maze judges you</div>
+      <div class="hint"><span>1 · pick DEED SEASON (the race) or LIFETIME</span> <span>2 · PRINT MY RECEIPT → download or share</span></div>
       <div class="chips">
-        <span class="lbl">try a real one:</span>
-        <span class="chip" data-a="0x7a25766ad7f1c66cf5a38c89a75fc98b41889941"><img class="chip-ic" src="art/icons/treasure.png" alt="">whale 0x7a25…9941</span>
-        <span class="chip" data-a="0x28cfe81381060ea23d7baa72b51b7116f99d9bb1"><img class="chip-ic" src="art/icons/gem.png" alt="">winner 0x28cf…9bb1</span>
-        <span class="chip" data-a="0xa43073b5eb85bbf66a41066e01529360dc1cddbe"><img class="chip-ic" src="art/icons/jackpot.png" alt="">hitter 0xa430…ddbe</span>
+        <span class="lbl">no wallet handy?</span>
+        <span class="chip" id="rndChip"><img class="chip-ic" src="art/enemies/ghost1.png" alt="">RANDOM MAZE DWELLER</span>
       </div>
       <div id="status"></div>
       <div id="statusMore" class="hint"></div>
@@ -289,9 +293,8 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 
 <footer>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
-  Source of truth: raw event logs of the <code>key shop 0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03</code> (KeysPurchased — paid in USDC or ETH) and <code>valorVault 0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA</code> (VALOR top-ups, cash-outs, maze hits) on Abstract (chain 2741), block 60 015 914 → head ·
-  <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
-  Invisible by nature: server-side key credits — VALOR key purchases, expedition/arcade claims, drops, marketplace settlements — leave no log here. Wins are server-signed proofs the vault verifies and pays from the pooled treasury on withdrawal. E.g. wallet <code>0x28cf…9bb1</code>: $17 on-chain fed (17 keys), $11.6k wins credited, $9.6k cashed — his other keys were free server-side credits, invisible by design; his Relay/Robinhood flows are winnings leaving Abstract, not key buys. Cross-chain (Robinhood/Relay) key buys DO hit the shop via buyKeysFor and are counted. Keys from the legacy ETH shop (0.001 ETH each) are counted at $1 face.<br>
+  Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
+  Server-side keys (VALOR buys, claims, drops) leave no on-chain log · legacy ETH-shop keys counted at $1 face · cross-chain (Robinhood) buys hit the shop and are counted.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -835,7 +838,13 @@ $("taunt").addEventListener("click", () => {
   }
 });
 $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
-document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { $("addr").value = c.dataset.a; run(c.dataset.a); }));
+document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { if (!c.dataset.a) return; $("addr").value = c.dataset.a; run(c.dataset.a); }));
+$("rndChip").addEventListener("click", () => {
+  const ks = HALL ? Object.keys(HALL.wallets) : [];
+  if (!ks.length) { fail("hall data not loaded yet - retry in a minute"); return; }
+  const a = ks[Math.floor(Math.random() * ks.length)];
+  $("addr").value = a; run(a);
+});
 $("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 $("fresh").addEventListener("click", () => { const a = $("addr").value.trim() || (lastPL && lastPL.wallet); if (a) run(a, true); });
 $("dl").addEventListener("click", e => {
