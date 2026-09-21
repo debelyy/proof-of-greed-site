@@ -80,6 +80,21 @@ if (hall.week !== curWeek) {
   for (const w of Object.values(hall.wallets)) { w.wkFed = 0; w.wkHits = 0; w.wkCashed = 0; }
   hall.totalsWk = { fed: 0, hits: 0, cashed: 0 };
   hall.week = curWeek;
+  hall.weekStartBlock = null;
+}
+// block where the current week began (weekEnd − 7d), binary-searched once per week
+let weekStartBlock = hall.weekStartBlock || 0;
+if (poolsJ && poolsJ.weekEnd && (!weekStartBlock || hall.weekStartBlockWeek !== curWeek)) {
+  const ts = Math.floor((Date.parse(poolsJ.weekEnd) - 7 * 86400000) / 1000);
+  const tsAt = async b => parseInt((await rpc("eth_getBlockByNumber", ["0x" + b.toString(16), false])).timestamp, 16);
+  let lo = DEPLOY, hi = head;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (await tsAt(mid) >= ts) hi = mid; else lo = mid + 1;
+  }
+  weekStartBlock = lo;
+  hall.weekStartBlock = lo;
+  hall.weekStartBlockWeek = curWeek;
 }
 
 let scanned = 0;
@@ -96,10 +111,12 @@ for (let from = Math.max(state.lastBlock + 1, DEPLOY); from <= head; from += CHU
     const blk = parseInt(l.blockNumber, 16);
     w.last = blk;
     const inE = blk >= EVENT_BLOCK;
-    if (t === SIG.DEP) { w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++; w.wkFed += usd; hall.totalsWk.fed += usd; if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; } }
-    else if (t === SIG.WD) { w.cashed += usd; hall.totals.cashed += usd; hall.totals.cashedN++; w.wkCashed += usd; hall.totalsWk.cashed += usd; if (inE) { w.cashedE += usd; hall.totalsE.cashed += usd; hall.totalsE.cashedN++; } }
+    const inW = blk >= weekStartBlock;
+    if (t === SIG.DEP) { w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++; if (inW) { w.wkFed += usd; hall.totalsWk.fed += usd; } if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; } }
+    else if (t === SIG.WD) { w.cashed += usd; hall.totals.cashed += usd; hall.totals.cashedN++; if (inW) { w.wkCashed += usd; hall.totalsWk.cashed += usd; } if (inE) { w.cashedE += usd; hall.totalsE.cashed += usd; hall.totalsE.cashedN++; } }
     else if (t === SIG.WIN) {
-      w.hits += usd; hall.totals.hits += usd; hall.totals.hitsN++; w.wkHits += usd; hall.totalsWk.hits += usd; if (usd > w.big) w.big = usd;
+      w.hits += usd; hall.totals.hits += usd; hall.totals.hitsN++; if (usd > w.big) w.big = usd;
+      if (inW) { w.wkHits += usd; hall.totalsWk.hits += usd; }
       if (inE) { w.hitsE += usd; hall.totalsE.hits += usd; hall.totalsE.hitsN++; if (usd > w.bigE) w.bigE = usd; }
     }
   }

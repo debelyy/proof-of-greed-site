@@ -109,6 +109,10 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
 .hall-note{font-size:15px; color:var(--muted); line-height:1.4}
+.receipt-legend{font-size:15px; color:var(--muted); text-align:center; line-height:1.5}
+.whatline{margin-top:10px; font-size:16px; color:var(--muted)}
+.whatline a{color:var(--violet); text-decoration:none}
+.whatline a:hover{text-decoration:underline}
 .spark-head{font-family:var(--px); font-size:9px; color:var(--violet); margin-top:14px; letter-spacing:.08em}
 #spark{width:100%; height:60px; display:block}
 .chips .lbl{color:var(--muted); font-size:14px; margin-right:2px}
@@ -143,7 +147,7 @@ canvas{width:100%; height:auto; display:block}
 .live-head .age{margin-left:auto; color:var(--muted); font-family:var(--term); font-size:16px; letter-spacing:.04em}
 .dot{width:10px; height:10px; background:var(--green); animation:blink 1.2s steps(1) infinite; flex:none}
 .dot.gold{background:var(--gold)}
-.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px}
 #statsWrap{display:flex; flex-direction:column; gap:12px}
 .stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
 .stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em}
@@ -183,6 +187,11 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
   .cast .bubble{max-width:220px}
   .scope{flex-direction:column}
   .scope-btn{font-size:9px; padding:10px 8px}
+  .fitem .verb{display:none}
+  .fitem{font-size:16px}
+  .fitem .ago{min-width:44px}
+  #receiptWrap{overflow-x:auto}
+  #receiptWrap canvas{min-width:600px; width:600px}
 }
 @media (prefers-reduced-motion: reduce){
   .marquee .track, .floater, .cast img, .verdict-row img, .dot, .fitem, #receiptWrap, h1, #status.busy::after{animation:none !important}
@@ -200,6 +209,7 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
 <header>
   <h1>PROOF OF GREED</h1>
   <div class="tagline">Every key you fed the maze. Every hit you cashed. Your <b>real lifetime receipt</b>, read straight from the Abstract chain.</div>
+  <div class="whatline">MAZE OF GAINS = 10-FLOOR DUNGEON CRAWLER ON ABSTRACT · KEY = $1 · WINS PAID IN VALOR (100 = $1) · <a href="https://playmog.xyz" target="_blank" rel="noopener">play</a> · your wallet = your in-game Abstract address</div>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
 </header>
 
@@ -228,25 +238,9 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
     </div>
   </section>
 
-  <section class="livebox">
-    <div class="live-head"><span class="dot"></span>LIVE VAULT TELEMETRY<span class="age" id="liveAge">connecting…</span></div>
-    <div id="statsWrap"><div class="stats" id="stats"></div><div class="stats" id="poolStats"></div></div>
-    <div id="sparkWrap" hidden>
-      <div class="spark-head">WEEKLY POOL GROWTH · SAMPLED EVERY 10M</div>
-      <canvas id="spark"></canvas>
-    </div>
-    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
-    <div class="feed" id="feed"></div>
-  </section>
-
-  <section class="livebox" id="hallBox" hidden>
-    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
-    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits — Deed Season blocks only. free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
-    <div class="hall" id="hall"></div>
-  </section>
-
   <section id="stage" class="hidden">
     <div id="receiptWrap"><canvas id="cv"></canvas></div>
+    <div class="receipt-legend">FED = USDC DEPOSITS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · RANKS = WALLETS WITH ON-CHAIN MOVES IN WINDOW</div>
     <div class="verdict-row">
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
@@ -257,6 +251,25 @@ footer code{font-family:var(--term); font-size:16px; color:var(--text)}
       <button id="again" class="btn-ghost">PRINT ANOTHER</button>
       <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
     </div>
+  </section>
+
+  <section class="livebox" id="hallBox" hidden>
+    <div class="live-head"><span class="dot gold"></span>HALL OF GREED<span class="age" id="hallAge"></span></div>
+    <div class="hall-note">how it's read: NET = USDC cashed out − USDC fed in · HITS = bounty/gem/throne credits · FED = deposits — Deed Season blocks only. free keys, in-run drops and marketplace flow are server-side, invisible on-chain.</div>
+    <div class="hall" id="hall"></div>
+  </section>
+
+  <section class="livebox">
+    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · BOT SNAPSHOT EVERY 10M<span class="age" id="liveAge">connecting…</span></div>
+    <div class="stats" id="poolStats"></div>
+    <div id="sparkWrap" hidden>
+      <div class="spark-head">POOL GROWTH THIS WEEK · SAMPLED EVERY 10 MIN</div>
+      <canvas id="spark"></canvas>
+    </div>
+    <div class="live-head"><span class="dot"></span>CHAIN · LAST 24H · LIVE 45S</div>
+    <div class="stats" id="stats"></div>
+    <div class="live-head"><span class="dot gold"></span>TAPE OF THE MAZE<span class="age">latest on-chain moves · refreshes every 45s</span></div>
+    <div class="feed" id="feed"></div>
   </section>
 </main>
 
@@ -466,7 +479,7 @@ function drawReceipt(pl) {
   L.push({ k: "gap", h: 8 });
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
   L.push({ k: "row", l: `  DEPOSITS x${pl.nDep}`, r: money(pl.deposits), big: true });
-  L.push({ k: "row", l: `  ~ KEYS x$1`, r: (Math.round(pl.deposits)).toLocaleString("en-US") });
+  L.push({ k: "row", l: `  KEYS BOUGHT (~$1 EACH)`, r: (Math.round(pl.deposits)).toLocaleString("en-US") });
   L.push({ k: "gap", h: 6 });
   L.push({ k: "center", t: "WHAT THE MAZE PAID BACK", f: `18px ${TERM}`, c: MUT, sp: 3 });
   L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
@@ -474,19 +487,20 @@ function drawReceipt(pl) {
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
   if (pl.rankHits) {
     L.push({ k: "gap", h: 6 });
-    L.push({ k: "center", t: pl.scope === "DEED SEASON" ? "YOUR RANK IN DEED SEASON" : "YOUR RANK ALL-TIME", f: `18px ${TERM}`, c: MUT, sp: 3 });
+    L.push({ k: "center", t: (pl.scope === "DEED SEASON" ? "YOUR RANK IN DEED SEASON" : "YOUR RANK ALL-TIME") + ` · ${pl.fieldN} WALLETS WITH ON-CHAIN MOVES`, f: `18px ${TERM}`, c: MUT, sp: 2 });
     L.push({ k: "row", l: "  BY HITS", r: `#${pl.rankHits} / ${pl.fieldN}` });
     L.push({ k: "row", l: "  BY NET", r: `#${pl.rankNet} / ${pl.fieldN}` });
-    L.push({ k: "row", l: "  LUCK INDEX (hits per $ fed)", r: pl.luck != null ? `${pl.luck.toFixed(2)} vs field ${pl.luckField.toFixed(2)}` : "free-roll, no fed $" });
-    L.push({ k: "row", l: "  STILL RIDING (max)", r: money(pl.riding), accent: GOLD });
+    L.push({ k: "row", l: "  HIT $ BACK PER $ FED (YOU VS FIELD)", r: pl.luck != null ? `${pl.luck.toFixed(2)} vs ${pl.luckField.toFixed(2)}` : "FED $0 - ALL HITS ON FREE KEYS" });
+    L.push({ k: "row", l: "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
   }
   if (pl.wk) {
     L.push({ k: "gap", h: 6 });
     L.push({ k: "center", t: "THIS WEEK (#" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 3 });
     L.push({ k: "row", l: "  FED / HITS / CASHED", r: `${money(pl.wk.fed)} / ${money(pl.wk.hits)} / ${money(pl.wk.cashed)}` });
-    L.push({ k: "row", l: "  EST. SHARE OF WEEKLY POOL", r: "~" + money(pl.wkShare), accent: GOLD });
+    L.push({ k: "row", l: "  EST. POOL CUT IF WEEK ENDED NOW (FED SHARE)", r: "~" + money(pl.wkShare), accent: GOLD });
   }
   L.push({ k: "gap", h: 6 });
+  L.push({ k: "center", t: "CASH ONLY - UNWITHDRAWN MAZE BALANCE NOT IN NET", f: `16px ${TERM}`, c: MUT, dy: 4 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
@@ -751,7 +765,7 @@ async function run(wallet, force = false) {
     $("stage").classList.remove("hidden");
     statusEl.className = "";
     const n = pl.nDep + pl.nWd + pl.nWin;
-    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposits, ${pl.nWin} hits, ${pl.nWd} cash-outs - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
+    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.nDep} deposit${pl.nDep === 1 ? "" : "s"}, ${pl.nWin} hit${pl.nWin === 1 ? "" : "s"}, ${pl.nWd} cash-out${pl.nWd === 1 ? "" : "s"} - net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
     $("stage").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     console.error(e);
@@ -774,6 +788,7 @@ const setScope = s => {
   scope = s;
   $("scEvent").classList.toggle("on", s === "event");
   $("scLife").classList.toggle("on", s === "life");
+  renderHall();
   if (lastWallet) run(lastWallet);
 };
 $("scEvent").addEventListener("click", () => setScope("event"));
@@ -846,10 +861,9 @@ async function liveTick() {
     const treas = usd6(parseInt(await rpc("eth_call", [{ to: USDC_ADDR, data: "0x70a08231" + "0".repeat(24) + CFG.VAULT.slice(2) }, "latest"]), 16));
     const cards = [
       { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC sitting in the vault now", ic: "art/icons/treasure.png" },
-      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposits", ic: "art/icons/key.png" },
-      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawals", ic: "art/icons/amber.png" },
+      { lbl: "FED IN · 24H", val: money(sum(dep)), sub: dep.length + " deposit" + (dep.length === 1 ? "" : "s"), ic: "art/icons/key.png" },
+      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png" },
       { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones", ic: "art/icons/gem.png" },
-      { lbl: "BLOCK", val: head.toLocaleString("en-US"), sub: "abstract head · live", ic: "art/icons/marble.png" },
     ];
     $("stats").innerHTML = cards.map(c =>
       `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
@@ -873,6 +887,24 @@ setInterval(liveTick, 45000);
 
 /* ═══════════════ BOT-FED DATA (GitHub Actions → data/*.json; skipped on file://) ═══════════════ */
 const kUsd = v => v >= 1000 ? "$" + (v / 1000).toLocaleString("en-US", { maximumFractionDigits: v >= 100000 ? 0 : 1 }) + "k" : money(v);
+function renderHall() {
+  if (!HALL || !(HALL.topsE || HALL.tops)) return;
+  const isE = scope === "event";
+  const T = isE ? (HALL.topsE || HALL.tops) : (HALL.tops || HALL.topsE);
+  const col = (cls, title, rows, fmt, ic) =>
+    `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
+      `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
+  $("hall").innerHTML =
+    col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true), "art/icons/treasure.png") +
+    col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v), "art/icons/gem.png") +
+    col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v), "art/icons/corn.png");
+  const se = HALL.totalsE || {}, at = HALL.totals || {};
+  $("hallAge").textContent = (isE
+    ? `deed season: fed ${kUsd(se.fed || 0)} · cashed ${kUsd(se.cashed || 0)} · hits ${kUsd(se.hits || 0)}`
+    : `all-time: fed ${kUsd(at.fed || 0)} · cashed ${kUsd(at.cashed || 0)} · hits ${kUsd(at.hits || 0)}`)
+    + ` · bot-updated ${(HALL.t || "").slice(11, 16)} UTC`;
+  $("hallBox").hidden = false;
+}
 async function loadData() {
   if (location.protocol === "file:") return;
   try {
@@ -886,12 +918,13 @@ async function loadData() {
     if (hist) PHIST = hist;
     if (pools) {
       const lw = PHIST && PHIST.lastWeek;
+      const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       $("poolStats").innerHTML = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "VALOR pool · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
-        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out", ic: "art/icons/evekey.png", vid: "wkReset" },
-        { lbl: "LAST WEEK PAID OUT", val: lw ? kUsd(lw.paidUsd) : "—", sub: lw ? "week #" + lw.week + " at reset" : "first tracked reset pending", ic: "art/icons/amber.png" },
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot", ic: "art/icons/jackpot.png" },
-        { lbl: "BOUNTIES PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "all-time · total dist " + Math.round(pools.totalDistributedEth || 0) + " ETH", ic: "art/icons/throne.png" },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "paid in VALOR · 100 VALOR = $1 · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
+        { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out pro-rata to keys", ic: "art/icons/evekey.png", vid: "wkReset" },
+        { lbl: "LAST WEEK PAID OUT", val: lw ? kUsd(lw.paidUsd) : "NO DATA YET", sub: lw ? "week #" + lw.week + " at reset" : "first tracked reset: " + resetStr, ic: "art/icons/amber.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot now", ic: "art/icons/jackpot.png" },
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH distributed all-time", ic: "art/icons/throne.png" },
       ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
       + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
       wkCd();
@@ -899,18 +932,7 @@ async function loadData() {
     }
     if (hall && (hall.topsE || hall.tops)) {
       HALL = hall;
-      const T = hall.topsE || hall.tops;
-      const tot = hall.totalsE || hall.totals || {};
-      const col = (cls, title, rows, fmt, ic) =>
-        `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
-          `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
-      $("hall").innerHTML =
-        col("top-net", "TOP NET (CASHED − FED)", T.net, r => money(r.v, true), "art/icons/treasure.png") +
-        col("top-hits", "TOP MAZE HITS", T.hits, r => kUsd(r.v), "art/icons/gem.png") +
-        col("top-fed", "TOP FED TO THE MAZE", T.fed, r => kUsd(r.v), "art/icons/corn.png");
-      const at = hall.totals || {};
-      $("hallAge").textContent = `deed season: fed ${kUsd(tot.fed || 0)} · cashed ${kUsd(tot.cashed || 0)} · hits ${kUsd(tot.hits || 0)} · all-time: ${kUsd(at.fed || 0)} fed · bot-updated ${(hall.t || "").slice(11, 16)} UTC`;
-      $("hallBox").hidden = false;
+      renderHall();
     }
   } catch {}
 }
@@ -929,7 +951,7 @@ setInterval(wkCd, 30000);
 
 function drawSpark() {
   const cv = $("spark");
-  if (!cv || !PHIST || !PHIST.points || PHIST.points.length < 2) return;
+  if (!cv || !PHIST || !PHIST.points || PHIST.points.length < 8) return;
   $("sparkWrap").hidden = false;
   const W = Math.max(300, cv.clientWidth) * 2, H = 120;
   cv.width = W; cv.height = H;
