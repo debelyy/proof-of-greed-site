@@ -486,35 +486,24 @@ function drawReceipt(pl) {
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
   if (pl.rankHits) {
-    L.push({ k: "gap", h: 6 });
-    L.push({ k: "center", t: (pl.scope === "DEED SEASON" ? "YOUR RANK IN DEED SEASON" : "YOUR RANK ALL-TIME") + ` · ${pl.fieldN} WALLETS WITH ON-CHAIN MOVES`, f: `18px ${TERM}`, c: MUT, sp: 2 });
-    L.push({ k: "row", l: "  BY HITS", r: `#${pl.rankHits} / ${pl.fieldN}` });
-    L.push({ k: "row", l: "  BY NET", r: `#${pl.rankNet} / ${pl.fieldN}` });
-    L.push({ k: "row", l: "  HIT $ BACK PER $ FED (YOU VS FIELD)", r: pl.luck != null ? `${pl.luck.toFixed(2)} vs ${pl.luckField.toFixed(2)}` : "FED $0 - ALL HITS ON FREE KEYS" });
     L.push({ k: "row", l: "  STILL IN THE MAZE (NOT CASHED OUT)", r: money(pl.riding), accent: GOLD });
-  }
-  if (pl.wk) {
-    L.push({ k: "gap", h: 6 });
-    L.push({ k: "center", t: "THIS WEEK (#" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 3 });
-    L.push({ k: "row", l: "  FED / HITS / CASHED", r: `${money(pl.wk.fed)} / ${money(pl.wk.hits)} / ${money(pl.wk.cashed)}` });
+    L.push({ k: "row", l: `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
   L.push({ k: "gap", h: 6 });
-  L.push({ k: "center", t: "CASH ONLY - UNWITHDRAWN MAZE BALANCE NOT IN NET", f: `16px ${TERM}`, c: MUT, dy: 4 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   if (pl.wkShare != null) {
     L.push({ k: "gap", h: 10 });
-    L.push({ k: "center", t: "WHERE THE REST COMES BACK", f: `18px ${TERM}`, c: MUT, sp: 3 });
-    L.push({ k: "row", l: "  EST. THU POOL CUT (POOL x TREASURE SHARE)", r: "~" + money(pl.wkShare), accent: GOLD });
+    L.push({ k: "center", t: "WHERE THE REST COMES BACK (WEEK #" + pl.wkNum + ")", f: `18px ${TERM}`, c: MUT, sp: 2 });
+    L.push({ k: "row", l: "  EST. THU POOL CUT (~70% OF KEYS RUN)", r: "~" + money(pl.wkShare), accent: GOLD });
     L.push({ k: "row", l: "  PROJECTED CASH+POOL IF WEEK ENDED NOW", r: money(pl.projected, true), accent: pl.projected >= 0 ? GREEN : RED });
-    L.push({ k: "center", t: "treasure is off-chain - cut proxied by your fed share - corn/silo/raffle value see in-game", f: `15px ${TERM}`, c: MUT, dy: 4 });
+    L.push({ k: "center", t: "pool = 70% of key spend, paid by treasure share - free-key treasure dilutes - corn/silo/raffle see in-game", f: `15px ${TERM}`, c: MUT, dy: 4 });
   }
   L.push({ k: "gap", h: 10 });
   L.push({ k: "center", t: "net = realized cash - unwithdrawn maze balance not counted", f: `16px ${TERM}`, c: MUT });
   L.push({ k: "center", t: "deposits = USDC top-ups only - free/drop/market keys are server-side", f: `16px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: pl.firstAt ? `FIRST BLOOD ${dateStr(pl.firstAt)}  -  LAST MOVE ${dateStr(pl.lastAt)}` : pl.scope === "DEED SEASON" ? "NO TRACE IN DEED SEASON" : "NO TRACE IN THE MAZE", f: `17px ${TERM}`, c: MUT, sp: 1, dy: 8 });
   L.push({ k: "gap", h: 16 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -754,7 +743,9 @@ async function run(wallet, force = false) {
       const hw = HALL.wallets[wallet.toLowerCase()];
       if (hw && POOLS && HALL.totalsWk && HALL.totalsWk.fed > 0) {
         pl.wk = { fed: hw.wkFed || 0, hits: hw.wkHits || 0, cashed: hw.wkCashed || 0 };
-        pl.wkShare = (hw.wkFed || 0) / HALL.totalsWk.fed * POOLS.weeklyPoolUsd;
+        // weekly pool = 70% of key spend, paid pro-rata to treasure ⇒ expected cut ≈ 0.7 × keys run ($),
+        // before free-key treasure dilution; never exceeds what was fed
+        pl.wkShare = 0.7 * (hw.wkFed || 0);
         pl.wkNum = HALL.week;
         pl.projected = pl.net + pl.wkShare;
       }
@@ -930,7 +921,7 @@ async function loadData() {
         { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "paid in VALOR · 100 VALOR = $1 · week #" + pools.weekNumber, ic: "art/icons/corn.png" },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · pool pays out pro-rata to keys", ic: "art/icons/evekey.png", vid: "wkReset" },
         { lbl: "LAST WEEK PAID OUT", val: lw ? kUsd(lw.paidUsd) : "NO DATA YET", sub: lw ? "week #" + lw.week + " at reset" : "first tracked reset: " + resetStr, ic: "art/icons/amber.png" },
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "≈ " + pools.bountyPoolEth.toFixed(1) + " ETH jackpot now", ic: "art/icons/jackpot.png" },
+        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "Jackalot bounty jackpot · gem cap $2,100 · throne pool = server state, not public", ic: "art/icons/jackpot.png" },
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH distributed all-time", ic: "art/icons/throne.png" },
       ].map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
       + `<div class="pool-age">pools as of ${(pools.t || "").slice(11, 16)} UTC · bot refresh 10m · chain cards live 45s</div>`;
