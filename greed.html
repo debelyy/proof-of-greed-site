@@ -296,7 +296,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 
 <footer>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
-  Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a><br>
+  Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a> · lifetime starts at the vault deploy (08.05.2026); the legacy ETH shop sold keys earlier (~block 38.5M) and pre-deploy key buys are not counted<br>
   Money spent inside the game server (VALOR key buys, free claims, drops) leaves no trace on the chain — invisible to everyone, us included. We read only the Abstract chain; we found no Robinhood-chain purchases on it. Old ETH-shop keys count as $1 each.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
@@ -315,7 +315,7 @@ setTimeout(() => {
 const CFG = {
   RPC: "https://api.mainnet.abs.xyz",
   VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
-  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, 60.0M→77.9M); full-chain sig scan 21.09: no third emitter
+  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, ≥38.5M→77.9M; pre-DEPLOY buys excluded by design, disclosed in footer); full-chain sig scan 21.09: no third emitter
   DEPLOY_BLOCK: 60015914,
   SIG: {
     DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw=usdc*100) — VALOR top-up, NOT keys
@@ -519,11 +519,12 @@ function drawReceipt(pl) {
     L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
   }
   L.push({ k: "gap", h: 4 });
+  L.push({ k: "row", l: `  VALOR CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
+  L.push({ k: "gap", h: 4 });
   L.push({ k: "center", t: M ? "MAZE CREDITED (NOT CASH YET)" : "WHAT THE MAZE CREDITED (NOT CASH YET)", f: `18px ${TERM}`, c: MUT, sp: 3 });
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
   else if (!noHit) L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
-  L.push({ k: "row", l: `  VALOR CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
   if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });

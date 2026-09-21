@@ -23,7 +23,7 @@ const SIG = {
   WD: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f",
   WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471",
 };
-// key shops: current USDC/ETH shop + legacy ETH shop (0.001 ETH/key, blocks 60.0M→~83M, counted at $1 face); KeysPurchased(buyer, qty, pricePerKey, totalPaid)
+// key shops: current USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, ≥38.5M→77.9M, counted at $1 face; pre-DEPLOY buys excluded by design, disclosed in footer); KeysPurchased(buyer, qty, pricePerKey, totalPaid)
 const KEY_SHOPS = ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"];
 const KP = "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089";
 const CHUNK = 100_000;
