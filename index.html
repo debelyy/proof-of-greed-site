@@ -277,14 +277,14 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     <div class="hall" id="hall"></div>
   </section>
 
-  <section id="stage" class="hidden">
+  <section id="stage">
     <div id="receiptWrap"><canvas id="cv"></canvas></div>
-    <div class="verdict-row">
+    <div class="verdict-row" id="verdictRow" hidden>
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = USDC WITHDRAWALS<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>KEYS BOUGHT INSIDE THE GAME SERVER ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN — NO ROBINHOOD PURCHASES FOUND ON IT</div>
-    <div class="actions">
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = VALOR CASHED OUT (PAID IN USDC ON-CHAIN)<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>KEYS BOUGHT INSIDE THE GAME SERVER ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN — NO ROBINHOOD PURCHASES FOUND ON IT</div>
+    <div class="actions" id="actionsRow" hidden>
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
       <button id="share" class="btn-ghost">COPY CAPTION</button>
@@ -523,7 +523,7 @@ function drawReceipt(pl) {
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
   else if (!noHit) L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
-  L.push({ k: "row", l: `  CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
+  L.push({ k: "row", l: `  VALOR CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
   if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
@@ -700,6 +700,41 @@ function drawReceipt(pl) {
 /* ═══════════════ UI ═══════════════ */
 const $ = id => document.getElementById(id);
 const statusEl = $("status");
+/* blank thermal paper so the receipt block always exists at the bottom of the page */
+function drawBlank() {
+  const M = matchMedia("(max-width:640px)").matches;
+  const W = M ? 440 : 760, S = 2, H = M ? 360 : 400;
+  const TERM = '"VT323", "Courier New", monospace';
+  const PIX = '"Press Start 2P", ' + TERM;
+  const cv = $("cv"); cv.width = W * S; cv.height = H * S;
+  const g = cv.getContext("2d"); g.scale(S, S);
+  const Z = 9, tooth = 14;
+  g.beginPath(); g.moveTo(0, Z);
+  for (let x = 0; x < W; x += tooth) g.lineTo(x + tooth / 2, 0), g.lineTo(x + tooth, Z);
+  g.lineTo(W, H - Z);
+  for (let x = W; x > 0; x -= tooth) g.lineTo(x - tooth / 2, H), g.lineTo(x - tooth, H - Z);
+  g.closePath(); g.fillStyle = "#f5f0e2"; g.fill();
+  const line = (t, f, c, y, sp) => {
+    g.font = f; g.fillStyle = c; g.textBaseline = "alphabetic";
+    if (sp) {
+      const chars = [...t]; const ws = chars.map(ch => g.measureText(ch).width + sp);
+      let x = W / 2 - ws.reduce((a, b) => a + b, 0) / 2 + sp / 2; g.textAlign = "left";
+      chars.forEach((ch, i) => { g.fillText(ch, x, y); x += ws[i]; });
+    } else { g.textAlign = "center"; g.fillText(t, W / 2, y); }
+  };
+  line("MAZE OF GAINS x ABSTRACT CHAIN", `${M ? 13 : 16}px ${TERM}`, "#5e5647", 60, 3);
+  line("PROOF OF GREED", `${M ? 15 : 21}px ${PIX}`, "#241f18", 100);
+  line("- BLANK RECEIPT -", `${M ? 13 : 16}px ${TERM}`, "#5e5647", 140, 5);
+  line("paste your wallet above", `20px ${TERM}`, "#5e5647", 200);
+  line("hit PRINT MY RECEIPT", `20px ${TERM}`, "#5e5647", 232);
+  line("the maze remembers everything on-chain", `${M ? 13 : 16}px ${TERM}`, "#5e5647", 282);
+  let h = cyrb("blank", 42); const rr = () => (h = (h * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let x = W / 2 - 120; g.fillStyle = "#241f18";
+  while (x < W / 2 + 120) { const w = 2 + Math.floor(rr() * 3) * 2; if (rr() > 0.42) g.fillRect(x, H - 64, w, 34); x += w + 2 + Math.floor(rr() * 3) * 2; }
+}
+drawBlank();
+// redraw the blank paper once webfonts land, unless a real receipt was printed meanwhile
+document.fonts.ready.then(() => { if (!window.__POG.printed) drawBlank(); }).catch(() => {});
 let lastPL = null;
 let lastWallet = null;
 let scope = "event";
@@ -777,7 +812,7 @@ async function run(wallet, force = false) {
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals);
     }
-    lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp;
+    lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp; window.__POG.printed = true;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
     drawReceipt(pl);
     const v = verdictOf(pl);
@@ -788,9 +823,11 @@ async function run(wallet, force = false) {
     spr.style.width = "auto";
     spr.classList.toggle("flip", v.flip);
     $("stage").classList.remove("hidden");
+    $("verdictRow").hidden = false;
+    $("actionsRow").hidden = false;
     statusEl.className = "";
     const n = pl.nKeys + pl.nDep + pl.nWd + pl.nWin;
-    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.keyQty} keys · ${pl.nDep} top-ups · ${pl.nWin} hits · ${pl.nWd} cash-outs · net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
+    statusEl.textContent = n ? `chain says (${scopeLabel.toLowerCase()}): ${pl.keyQty} keys · ${pl.nDep} top-ups · ${pl.nWin} hits · ${pl.nWd} valor cash-outs · net ${money(pl.net, true)}` : `no trace of this wallet in the ${scopeLabel.toLowerCase()} window. clean record.`;
     if (scope === "event") {
       const lf = ev.deposits.reduce((s, x) => s + x.usd, 0) + (ev.keyBuys || []).reduce((s, x) => s + x.usd, 0), lc = ev.withdrawals.reduce((s, x) => s + x.usd, 0);
       if (lf > pl.fed + 0.01 || lc > pl.withdrawals + 0.01) $("statusMore").textContent = `lifetime totals are higher: fed ${money(lf)} · cashed ${money(lc)} — press LIFETIME for the full receipt`;
@@ -842,7 +879,7 @@ $("taunt").addEventListener("click", () => {
 });
 $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
 document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { if (!c.dataset.a) return; $("addr").value = c.dataset.a; run(c.dataset.a); }));
-$("again").addEventListener("click", () => { $("stage").classList.add("hidden"); statusEl.textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+$("again").addEventListener("click", () => { drawBlank(); $("verdictRow").hidden = true; $("actionsRow").hidden = true; statusEl.textContent = ""; $("statusMore").textContent = ""; $("addr").value = ""; $("addr").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); });
 $("fresh").addEventListener("click", () => { const a = $("addr").value.trim() || (lastPL && lastPL.wallet); if (a) run(a, true); });
 $("dl").addEventListener("click", e => {
   const cv = $("cv");
@@ -929,7 +966,7 @@ async function liveTick() {
     const cards = [
       { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png", why: "USDC sitting in the vault contract right now, read from the chain. Not only players money: the game treasury refills it and ops sweeps leave it too." },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png", why: "Key buys and top-ups the chain saw in the last ~24 hours (window measured live, plus-minus 1%). Keys bought inside the game server never touch the chain, so they can not be here." },
-      { lbl: "CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " withdrawal" + (wd.length === 1 ? "" : "s"), ic: "art/icons/amber.png", why: "Exact on-chain USDC withdrawals from the vault in the last ~24 hours (window plus-minus 1%)." },
+      { lbl: "VALOR CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " cash-out" + (wd.length === 1 ? "" : "s") + " paid in USDC", ic: "art/icons/amber.png", why: "Players sell VALOR back to the game (min 500 VALOR, 5% fee, 24h delay per game rules); the vault pays USDC on-chain - those transfers are exactly what we count here." },
       { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. The big returns - Thursday pool share and ETH jackpots - are separate, and partly server-side." },
     ];
     $("stats").innerHTML = cards.map(c =>
@@ -941,7 +978,7 @@ async function liveTick() {
     $("feed").innerHTML = feed.map(({ l, kind }) => {
       const qty = kind === "key" ? word(l, 0) : 0;
       const glyph = kind === "win" ? "★" : kind === "wd" ? "▼" : kind === "key" ? "◆" : "▲";
-      const verb = kind === "win" ? "maze hit credited" : kind === "wd" ? "cashed out" : kind === "key" ? `bought ${qty.toLocaleString("en-US")} key${qty === 1 ? "" : "s"}` : "topped up VALOR";
+      const verb = kind === "win" ? "maze hit credited" : kind === "wd" ? "cashed out VALOR (paid USDC)" : kind === "key" ? `bought ${qty.toLocaleString("en-US")} key${qty === 1 ? "" : "s"}` : "topped up VALOR";
       const col = kind === "win" ? "var(--gold)" : kind === "wd" ? "var(--green)" : kind === "key" ? "var(--pink)" : "var(--violet)";
       const addr = "0x" + l.topics[1].slice(-40);
       const amt = kind === "key" ? kpUsd(l) : kind === "dep" ? depUsd(l) : usd6(word(l, 0));
