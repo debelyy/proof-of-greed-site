@@ -531,7 +531,8 @@ function drawReceipt(pl) {
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
   if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
-    L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
+    const bot = HALL && HALL.t ? " · bot " + HALL.t.slice(11, 16) : "";
+    L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net${M ? "" : bot}` });
   }
   if (pl.wins > 0.005) L.push({ k: "row", l: M ? "  PAPER NET (HITS AT FACE)" : "  PAPER NET (CASHED + CREDITS AT FACE)", r: money(pl.paperNet, true) });
   L.push({ k: "gap", h: 4 });
@@ -1029,10 +1030,13 @@ function renderHall() {
     col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
     col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png");
   const se = HALL.totalsE || {}, at = HALL.totals || {};
-  $("hallAge").textContent = (isE
+  const ageH = HALL.t ? (Date.now() - Date.parse(HALL.t)) / 3600000 : 99;
+  const staleH = ageH > 5 ? "⚠ STALE " + (ageH >= 10 ? Math.round(ageH) : ageH.toFixed(1)) + "h — " : "";
+  $("hallAge").textContent = staleH + (isE
     ? `deed season: fed ${kUsd(se.fed || 0)} · cashed ${kUsd(se.cashed || 0)} · hits ${kUsd(se.hits || 0)}`
     : `all-time: fed ${kUsd(at.fed || 0)} · cashed ${kUsd(at.cashed || 0)} · hits ${kUsd(at.hits || 0)}`)
     + ` · bot-updated ${(HALL.t || "").slice(11, 16)} UTC`;
+  $("hallAge").style.color = staleH ? "#c96a5e" : "";
   $("hallBox").hidden = false;
 }
 async function loadData() {
@@ -1053,7 +1057,7 @@ async function loadData() {
       const wn = Number(pools.weekNumber);
       const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified; can lag by minutes." },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified: the API itself can lag minutes, and our bot copies it only a few times a day - trust the copy time, not the freshness." },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
       ];
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png", why: "Snapshot of the previous week pool at reset, stored by our bot when the week flipped." });
@@ -1068,8 +1072,10 @@ async function loadData() {
         ic: "art/icons/key.png",
         why: "The game's own event dashboard (PostHog) counted every arcade key bought this season: " + PH.keysAbstract.toLocaleString("en-US") + " settled on Abstract plus " + PH.keysRobinhood.toLocaleString("en-US") + " Robinhood-chain relay buys that leave no Abstract trace. Our chain cards see only the Abstract part - Robinhood and in-game VALOR buys are invisible to every chain reader. Same dashboard says the server paid $" + Math.round(PH.gemsPaidUsd).toLocaleString("en-US") + " in gem bounties this season; the vault's on-chain hit credits cover roughly a quarter of that. PostHog copy time is in the footer line below.",
       });
+      const pAgeH = pools.t ? (Date.now() - Date.parse(pools.t)) / 3600000 : 99;
+      const pStale = pAgeH > 5 ? `⚠ STALE ${pAgeH >= 10 ? Math.round(pAgeH) : pAgeH.toFixed(1)}h — ` : "";
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
+      + `<div class="pool-age"${pStale ? ' style="color:#c96a5e"' : ""}>${pStale}these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
     if (hall && (hall.topsE || hall.tops)) {
