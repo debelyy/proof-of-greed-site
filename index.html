@@ -811,9 +811,9 @@ setInterval(() => { if ($("stage").classList.contains("hidden") && !$("taunt").d
 
 const STAGES = [
   "contacting the abstract chain…",
-  "reading the vault's full history since may 8…",
+  "reading the maze's full on-chain history since february…",
   "counting keys fed to the maze…",
-  "collecting hits from sir jackalot's ledger…",
+  "collecting hits and eth claims from jackalot's ledgers…",
   "consulting sir jackalot about your decisions…",
 ];
 let stageTimer = null;
@@ -884,12 +884,13 @@ function shareText() {
   if (!lastPL) return "";
   const p = lastPL;
   const url = location.href.split("?")[0];
-  if (!p.nDep && !p.nKeys && !p.nWd && !p.nWin)
+  if (!p.nDep && !p.nKeys && !p.nWd && !p.nWin && !p.nClaims)
     return `TOURIST · no trace in Maze of Gains yet 🌽 print yours: ${url} #ProofOfGreed #DeedSeason`;
   const hook = `${verdictOf(p).stamp} · NET ${money(p.net, true)} (${p.scope === "DEED SEASON" ? "Deed Season" : "lifetime"})`;
   const rank = p.rankHits ? ` · #${p.rankHits} hits of ${p.fieldN} wallets` : "";
   const hit = p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "";
-  return `${hook}${rank}${hit} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
+  const eth = p.nClaims ? ` · ${p.ethClaims.toFixed(2)} ETH claimed` : "";
+  return `${hook}${rank}${hit}${eth} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
 
 $("go").addEventListener("click", () => run($("addr").value));
@@ -1043,7 +1044,7 @@ function buildMq() {
     const t = HALL.totals || {}, n = Object.keys(HALL.wallets || {}).length;
     if (n) items.push(n.toLocaleString("en-US") + " WALLETS SEEN IN THE MAZE");
     items.push("LIFETIME: " + kUsd(t.fed || 0) + " FED · " + kUsd(t.cashed || 0) + " CASHED · " + kUsd(t.hits || 0) + " HITS");
-    if (t.eth > 0.01) items.push("ETH BOUNTIES " + Math.round(t.eth) + " ETH ≈ " + kUsd(t.eth * (HALL.ethSpot || 0)) + " CLAIMED ON-CHAIN");
+    if (t.eth > 0.01) items.push("ETH BOUNTIES " + Math.round(t.eth) + " ETH" + (HALL.ethSpot ? " ≈ " + kUsd(t.eth * HALL.ethSpot) : "") + " CLAIMED ON-CHAIN");
   }
   if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · JACKPOTS " + Math.round(POOLS.jackpotsPaidEth || 0) + " ETH PAID (OFF-CHAIN)");
   items.push(...MQ_LORE);
