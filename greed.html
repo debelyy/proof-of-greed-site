@@ -1073,6 +1073,40 @@ function renderHall() {
   $("hallAge").style.color = staleH ? "#c96a5e" : "";
   $("hallBox").hidden = false;
 }
+const statCard = c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`;
+const phCard = () => ({
+  lbl: "SERVER-SEEN KEYS · SEASON",
+  val: kUsd(PH.keysTotal),
+  sub: "abstract " + PH.keysAbstract.toLocaleString("en-US") + " + robinhood " + PH.keysRobinhood.toLocaleString("en-US") + " (relay) · chain sees abstract only" + (PH.live ? " · live" : ""),
+  ic: "art/icons/key.png",
+  why: "The game's own event dashboard (PostHog) counted every arcade key bought this season: " + PH.keysAbstract.toLocaleString("en-US") + " settled on Abstract plus " + PH.keysRobinhood.toLocaleString("en-US") + " Robinhood-chain relay buys that leave no Abstract trace. Our chain cards see only the Abstract part - Robinhood and in-game VALOR buys are invisible to every chain reader. Same dashboard says the server paid $" + Math.round(PH.gemsPaidUsd).toLocaleString("en-US") + " in gem bounties this season; the vault's on-chain hit credits cover roughly a quarter of that. " + (PH.live ? "Fetched live in your browser from the game's public dashboard - the game's own ledgers can lag hours behind." : "Copied by our bot; copy time in the footer line below."),
+});
+// the game's public event dashboard is CORS-open: refresh the server-seen card in the user's
+// browser instead of waiting hours for our bot copy (falls back silently to the bot copy)
+async function tryPosthogLive() {
+  if (!PH) return;
+  try {
+    const ins = async id => {
+      const r = await fetch("https://us.posthog.com/api/environments/569134/insights/" + id + "/?from_dashboard=2114550&sharing_access_token=i2BtIlfGANozI7OO_cm1rIA2JKbPGg", { headers: { accept: "application/json" }, signal: AbortSignal.timeout(9000) });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json();
+      if (!Array.isArray(j.result)) throw new Error("no result");
+      return j.result;
+    };
+    const ks = await ins(12041385);
+    const gem = await ins(12040502);
+    const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
+    const ka = row(ks, "Abstract"), kr = row(ks, "Robinhood");
+    const gems = gem.length ? Number(gem[gem.length - 1][1]) : 0;
+    if (!(ka || kr || gems)) return;
+    PH.keysAbstract = ka; PH.keysRobinhood = kr; PH.keysTotal = ka + kr; PH.gemsPaidUsd = gems; PH.t = new Date().toISOString(); PH.live = true;
+    const card = [...document.querySelectorAll("#poolStats .stat")].find(x => x.textContent.includes("SERVER-SEEN"));
+    if (card) card.outerHTML = statCard(phCard());
+    const ages = [...document.querySelectorAll(".pool-age")].filter(x => x.textContent.includes("posthog"));
+    for (const a of ages) a.innerHTML = a.innerHTML.replace(/posthog \d\d:\d\d UTC(?! · LIVE)/, "posthog " + PH.t.slice(11, 16) + " UTC · LIVE");
+  } catch {}
+}
+
 async function loadData() {
   if (location.protocol === "file:") return;
   try {
@@ -1097,18 +1131,12 @@ async function loadData() {
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png", why: "Snapshot of the previous week pool at reset, stored by our bot when the week flipped." });
       poolCards.push(
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total. ETH payouts are the MoG 1 era: 2.0 pays bounties in VALOR." },
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total. Cross-check: our on-chain claim-vault scan sees ~930 ETH of bounty+jackpot payouts over the game's history - within 1% of this API's all-time total." },
       );
-      if (PH) poolCards.push({
-        lbl: "SERVER-SEEN KEYS · SEASON",
-        val: kUsd(PH.keysTotal),
-        sub: "abstract " + PH.keysAbstract.toLocaleString("en-US") + " + robinhood " + PH.keysRobinhood.toLocaleString("en-US") + " (relay) · chain sees abstract only",
-        ic: "art/icons/key.png",
-        why: "The game's own event dashboard (PostHog) counted every arcade key bought this season: " + PH.keysAbstract.toLocaleString("en-US") + " settled on Abstract plus " + PH.keysRobinhood.toLocaleString("en-US") + " Robinhood-chain relay buys that leave no Abstract trace. Our chain cards see only the Abstract part - Robinhood and in-game VALOR buys are invisible to every chain reader. Same dashboard says the server paid $" + Math.round(PH.gemsPaidUsd).toLocaleString("en-US") + " in gem bounties this season; the vault's on-chain hit credits cover roughly a quarter of that. PostHog copy time is in the footer line below.",
-      });
+      if (PH) poolCards.push(phCard());
       const pAgeH = pools.t ? (Date.now() - Date.parse(pools.t)) / 3600000 : 99;
       const pStale = pAgeH > 5 ? `⚠ STALE ${pAgeH >= 10 ? Math.round(pAgeH) : pAgeH.toFixed(1)}h — ` : "";
-      $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
+      $("poolStats").innerHTML = poolCards.map(statCard).join("")
       + `<div class="pool-age"${pStale ? ' style="color:#c96a5e"' : ""}>${pStale}these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
@@ -1117,6 +1145,7 @@ async function loadData() {
       renderHall();
     }
     buildMq();
+    tryPosthogLive();
   } catch {}
 }
 loadData();
