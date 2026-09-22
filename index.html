@@ -283,7 +283,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = VALOR CASHED OUT (PAID IN USDC ON-CHAIN)<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>KEYS BOUGHT INSIDE THE GAME SERVER ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN — NO ROBINHOOD PURCHASES FOUND ON IT</div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS · CASHED = VALOR CASHED OUT (PAID IN USDC ON-CHAIN)<br>NET = CASHED − FED (CASH ONLY) · NET & RANKS USE ON-CHAIN FED ONLY · LEGACY ETH-SHOP KEYS COUNTED AT $1 FACE<br>KEYS BOUGHT INSIDE THE GAME SERVER OR VIA THE ROBINHOOD-CHAIN RELAY ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN</div>
     <div class="actions" id="actionsRow" hidden>
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
@@ -297,7 +297,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 <footer>
   <div class="headblock">ABSTRACT HEAD BLOCK <span id="headBlock">……</span> · VAULT <span>0x2DDF…3BbA</span></div>
   Source of truth: raw logs of <code>key shop 0x3ef1…5E03</code> + <code>valorVault 0x2DDF…3BbA</code>, block 60 015 914 → head · <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">verify keys</a> · <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">verify vault</a> · lifetime starts at the vault deploy (08.05.2026); the legacy ETH shop sold keys earlier (~block 38.5M) and pre-deploy key buys are not counted<br>
-  Money spent inside the game server (VALOR key buys, free claims, drops) leaves no trace on the chain — invisible to everyone, us included. We read only the Abstract chain; we found no Robinhood-chain purchases on it. Old ETH-shop keys count as $1 each.<br>
+  Money spent inside the game server (VALOR key buys, free claims, drops) leaves no trace on the chain — invisible to everyone, us included. Keys bought via the Robinhood-chain relay (the game's server counted ~394k of them this season) also leave no Abstract trace and can't appear here. Old ETH-shop keys count as $1 each.<br>
   Fan project · not affiliated with Onchain Heroes · <b>not financial advice</b> · sprites belong to the maze.
 </footer>
 
@@ -319,11 +319,10 @@ const CFG = {
   DEPLOY_BLOCK: 60015914,
   SIG: {
     DEPOSIT: "0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca", // (player, usdcRaw, valorRaw=usdc*100) — VALOR top-up, NOT keys
-    KEYS: "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089", // KeysPurchased(buyer, qty, pricePerKey, totalPaid 1e6 incl 7% fee) — USDC or ETH via router
+    KEYS: "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089", // KeysPurchased(buyer, qty, pricePerKey, totalPaid 1e6 incl 7% fee) — USDC or ETH via router (ETH txs carry eth value; word2 = $1/key nominal, real ETH cost ~1% higher); VALOR payments are game-server-side: no event, invisible to any chain reader
     WITHDRAW: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f", // (player, usdcRaw, ...) USDC sent in-tx
     WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471", // (player, usdRaw, usdRaw, unixTs) credit, no in-tx transfer
   },
-  CACHE_TTL_MS: 10 * 60 * 1000,
   MAX_LOGS: 10000,
   EVENT: { START_BLOCK: 84166603, START_TS: 1789660800000, END_TS: 1790611200000 }, // Deed Season: 17.09 16:00 → 28.09 16:00 UTC
 };
@@ -407,27 +406,28 @@ const depUsd = log => { const w0 = word(log, 0); return w0 > 0 ? w0 / 1e6 : word
 const kpUsd = log => word(log, 1) > 1e12 ? word(log, 0) : usd6(word(log, 2));
 
 async function fetchWallet(wallet, { force = false } = {}) {
-  const ck = "pog:v4:" + wallet.toLowerCase();
-  if (!force) {
-    try {
-      const c = JSON.parse(localStorage.getItem(ck) || "null");
-      if (c && Date.now() - c.t < CFG.CACHE_TTL_MS) return c.events;
-    } catch {}
-  }
+  // cache holds the full history once scanned; every print refetches only the blocks
+  // after the cached head, so a receipt never misses keys bought a minute ago
+  const ck = "pog:v5:" + wallet.toLowerCase();
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(ck) || "null"); } catch {}
+  if (force) cached = null;
   const head = parseInt(await rpc("eth_blockNumber", []), 16);
   const t = pad32(wallet);
+  const ev = cached && cached.events && cached.events.head < head ? cached.events : null;
+  const from = ev ? ev.head + 1 : CFG.DEPLOY_BLOCK;
   const [dep, wd, win, kb] = await Promise.all([
-    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.DEPOSIT, t] }, CFG.DEPLOY_BLOCK, head),
-    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WITHDRAW, t] }, CFG.DEPLOY_BLOCK, head),
-    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WIN, t] }, CFG.DEPLOY_BLOCK, head),
-    getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS, t] }, CFG.DEPLOY_BLOCK, head),
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.DEPOSIT, t] }, from, head),
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WITHDRAW, t] }, from, head),
+    getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WIN, t] }, from, head),
+    getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS, t] }, from, head),
   ]);
   const events = {
     head,
-    deposits: dep.map(l => ({ usd: depUsd(l), block: parseInt(l.blockNumber, 16) })),
-    withdrawals: wd.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
-    wins: win.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) })),
-    keyBuys: kb.map(l => ({ qty: word(l, 0), usd: kpUsd(l), block: parseInt(l.blockNumber, 16) })),
+    deposits: [...(ev ? ev.deposits : []), ...dep.map(l => ({ usd: depUsd(l), block: parseInt(l.blockNumber, 16) }))],
+    withdrawals: [...(ev ? ev.withdrawals : []), ...wd.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) }))],
+    wins: [...(ev ? ev.wins : []), ...win.map(l => ({ usd: usd6(word(l, 0)), block: parseInt(l.blockNumber, 16) }))],
+    keyBuys: [...((ev && ev.keyBuys) || []), ...kb.map(l => ({ qty: word(l, 0), usd: kpUsd(l), eth: word(l, 1) > 1e12 ? word(l, 2) / 1e18 : 0, block: parseInt(l.blockNumber, 16) }))],
   };
   try { localStorage.setItem(ck, JSON.stringify({ t: Date.now(), events })); } catch {}
   return events;
@@ -440,6 +440,8 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
   const sum = a => a.reduce((s, x) => s + x.usd, 0);
   const deposits = sum(dep), withdrawals = sum(wd), wins = sum(win);
   const keysUsd = sum(kb), keyQty = kb.reduce((s, x) => s + x.qty, 0);
+  const leg = kb.filter(x => x.eth > 0);
+  const legQty = leg.reduce((s, x) => s + x.qty, 0), legacyEth = leg.reduce((s, x) => s + x.eth, 0);
   const fed = deposits + keysUsd;
   const net = withdrawals - fed;
   const all = [...dep, ...wd, ...win, ...kb];
@@ -450,7 +452,8 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
   const tsMap = {};
   await Promise.all(tsBlocks.map(async b => { tsMap[b] = await blockTime(b); }));
   return {
-    wallet, net, fed, deposits, keysUsd, keyQty, withdrawals, wins, scope: scopeLabel,
+    wallet, net, fed, deposits, keysUsd, keyQty, legQty, legacyEth, withdrawals, wins, scope: scopeLabel,
+    paperNet: withdrawals + wins - fed,
     nDep: dep.length, nKeys: kb.length, nWd: wd.length, nWin: win.length,
     biggest: biggest ? { usd: biggest.usd, at: tsMap[biggest.block] } : null,
     firstAt: first ? tsMap[first] : null,
@@ -512,9 +515,10 @@ function drawReceipt(pl) {
   L.push({ k: "center", t: "MONEY FED TO THE MAZE", f: `18px ${TERM}`, c: MUT, sp: 3 });
   const noTop = !(pl.nDep || pl.deposits > 0.004), noHit = !(pl.nWin || pl.wins > 0.004);
   if (pl.fed < 0.005) {
-    L.push({ k: "center", t: M ? "NO ON-CHAIN MONEY - SERVER KEYS LEAVE NO TRACE" : "NO MONEY SEEN ON CHAIN THIS WINDOW - GAME-SERVER KEYS LEAVE NO TRACE", f: `16px ${TERM}`, c: MUT, dy: 2 });
+    L.push({ k: "center", t: M ? "NO ON-CHAIN MONEY - VALOR/ROBINHOOD KEYS: NO TRACE" : "NO MONEY SEEN ON CHAIN THIS WINDOW - VALOR/ROBINHOOD KEY BUYS LEAVE NO TRACE", f: `16px ${TERM}`, c: MUT, dy: 2 });
   } else {
-    L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  KEYS BOUGHT x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})`, r: money(pl.keysUsd), big: true });
+    L.push({ k: "row", l: M ? `  KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"})` : `  ON-CHAIN KEYS x${pl.keyQty} (${pl.nKeys} BUY${pl.nKeys === 1 ? "" : "S"} · USDC/ETH PAID)`, r: money(pl.keysUsd), big: true });
+    if (pl.legacyEth > 0.0004) L.push({ k: "row", l: M ? `  LEGACY x${pl.legQty} PAID IN ETH` : `  LEGACY KEYS x${pl.legQty} · PAID IN ETH`, r: pl.legacyEth.toFixed(3) + " ETH · $1 FACE" });
     if (!noTop) L.push({ k: "row", l: `  VALOR TOP-UPS x${pl.nDep}`, r: money(pl.deposits) });
     L.push({ k: "row", l: "  TOTAL FED", r: money(pl.fed), big: true });
   }
@@ -529,13 +533,15 @@ function drawReceipt(pl) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net` });
   }
+  if (pl.wins > 0.005) L.push({ k: "row", l: M ? "  PAPER NET (HITS AT FACE)" : "  PAPER NET (CASHED + CREDITS AT FACE)", r: money(pl.paperNet, true) });
   L.push({ k: "gap", h: 4 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
   L.push({ k: "rule", zig: true });
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   L.push({ k: "gap", h: 8 });
-  L.push({ k: "center", t: M ? "ABSTRACT CHAIN ONLY · NET = CASHED - FED" : "FED = KEYS+TOP-UPS ON ABSTRACT · NET = CASHED-FED · SERVER KEYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: M ? "ABSTRACT CHAIN ONLY · NET = CASHED - FED" : "FED = KEYS+TOP-UPS ON ABSTRACT · NET = CASHED-FED · VALOR KEY BUYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
+  L.push({ k: "center", t: M ? "ROBINHOOD/EVE KEYS + RACE/JACKPOTS: SERVER-SIDE" : "ROBINHOOD/EVE KEYS + RACE VALOR + ETH JACKPOTS: SERVER-SIDE - SEEN ONCE CASHED", f: `16px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 12 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -742,6 +748,7 @@ let scope = "event";
 let HALL = null;
 let POOLS = null;
 let PHIST = null;
+let PH = null;
 window.__POG = { lastPL: null, SPR };
 
 // last block of Deed Season (binary search, cached) — only needed after 28.09
@@ -935,8 +942,8 @@ $("cv").addEventListener("click", () => {
 const USDC_ADDR = "0x84a71ccd554cc1b02749b35d22f684cc8ec987e1";
 const BLOCK_SEC = 0.484; // measured on a 2000-block sample, 20.09.2026
 const DAY_BLOCKS = 178000; // ~24h at BLOCK_SEC
-const agoStr = (head, blk) => {
-  const s = Math.max(0, Math.round((head - blk) * BLOCK_SEC));
+const agoStr = (head, blk, sec = BLOCK_SEC) => {
+  const s = Math.max(0, Math.round((head - blk) * sec));
   if (s < 90) return s + "s";
   if (s < 5400) return Math.round(s / 60) + "m";
   return Math.round(s / 3600) + "h";
@@ -947,11 +954,12 @@ async function liveTick() {
     const head = parseInt(await rpc("eth_blockNumber", []), 16);
     // live-measured block time keeps the "24H" window honest if block cadence drifts
     let from = head - DAY_BLOCKS;
+    let secBlk = BLOCK_SEC;
     try {
       const tsNow = parseInt((await rpc("eth_getBlockByNumber", ["0x" + head.toString(16), false])).timestamp, 16);
       const tsOld = parseInt((await rpc("eth_getBlockByNumber", ["0x" + (head - DAY_BLOCKS).toString(16), false])).timestamp, 16);
       const sec = (tsNow - tsOld) / DAY_BLOCKS;
-      if (sec > 0.05 && sec < 5) from = head - Math.round(86400 / sec);
+      if (sec > 0.05 && sec < 5) { from = head - Math.round(86400 / sec); secBlk = sec; }
     } catch {}
     const [vlogs, klogs] = await Promise.all([
       getLogsChunked({ address: CFG.VAULT }, from, head),
@@ -968,7 +976,7 @@ async function liveTick() {
       { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png", why: "USDC sitting in the vault contract right now, read from the chain. Not only players money: the game treasury refills it and ops sweeps leave it too." },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png", why: "Key buys and top-ups the chain saw in the last ~24 hours (window measured live, plus-minus 1%). Keys bought inside the game server never touch the chain, so they can not be here." },
       { lbl: "VALOR CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " cash-out" + (wd.length === 1 ? "" : "s") + " paid in USDC", ic: "art/icons/amber.png", why: "Players sell VALOR back to the game (min 500 VALOR, 5% fee, 24h delay per game rules); the vault pays USDC on-chain - those transfers are exactly what we count here." },
-      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. The big returns - Thursday pool share and ETH jackpots - are separate, and partly server-side." },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. Measured 22.09: this is roughly a QUARTER of the gem value the game server actually paid - the rest is server-side VALOR, visible here only once cashed out. Thursday pool shares and ETH jackpots are separate, and server-side too." },
     ];
     $("stats").innerHTML = cards.map(c =>
       `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
@@ -983,7 +991,7 @@ async function liveTick() {
       const col = kind === "win" ? "var(--gold)" : kind === "wd" ? "var(--green)" : kind === "key" ? "var(--pink)" : "var(--violet)";
       const addr = "0x" + l.topics[1].slice(-40);
       const amt = kind === "key" ? kpUsd(l) : kind === "dep" ? depUsd(l) : usd6(word(l, 0));
-      return `<div class="fitem ${kind}"><span class="who" style="color:${col}">${glyph} ${short(addr)}</span><span class="verb">${verb}</span><span class="amt" style="color:${col}">${money(amt)}</span><span class="ago">~${agoStr(head, parseInt(l.blockNumber, 16))}</span></div>`;
+      return `<div class="fitem ${kind}"><span class="who" style="color:${col}">${glyph} ${short(addr)}</span><span class="verb">${verb}</span><span class="amt" style="color:${col}">${money(amt)}</span><span class="ago">~${agoStr(head, parseInt(l.blockNumber, 16), secBlk)}</span></div>`;
     }).join("");
     ageEl.textContent = "updated " + new Date().toISOString().slice(11, 19) + " UTC";
   } catch (e) {
@@ -1031,13 +1039,15 @@ async function loadData() {
   if (location.protocol === "file:") return;
   try {
     const nb = "?" + Date.now();
-    const [pools, hall, hist] = await Promise.all([
+    const [pools, hall, hist, ph] = await Promise.all([
       fetch("data/pools.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
       fetch("data/hall.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
       fetch("data/pools_hist.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      fetch("data/posthog.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
     ]);
     if (pools) POOLS = pools;
     if (hist) PHIST = hist;
+    if (ph && ph.keysTotal != null) PH = ph;
     if (pools) {
       const lw = PHIST && PHIST.lastWeek;
       const wn = Number(pools.weekNumber);
@@ -1049,10 +1059,17 @@ async function loadData() {
       if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png", why: "Snapshot of the previous week pool at reset, stored by our bot when the week flipped." });
       poolCards.push(
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total." },
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total. ETH payouts are the MoG 1 era: 2.0 pays bounties in VALOR." },
       );
+      if (PH) poolCards.push({
+        lbl: "SERVER-SEEN KEYS · SEASON",
+        val: kUsd(PH.keysTotal),
+        sub: "abstract " + PH.keysAbstract.toLocaleString("en-US") + " + robinhood " + PH.keysRobinhood.toLocaleString("en-US") + " (relay) · chain sees abstract only",
+        ic: "art/icons/key.png",
+        why: "The game's own event dashboard (PostHog) counted every arcade key bought this season: " + PH.keysAbstract.toLocaleString("en-US") + " settled on Abstract plus " + PH.keysRobinhood.toLocaleString("en-US") + " Robinhood-chain relay buys that leave no Abstract trace. Our chain cards see only the Abstract part - Robinhood and in-game VALOR buys are invisible to every chain reader. Same dashboard says the server paid $" + Math.round(PH.gemsPaidUsd).toLocaleString("en-US") + " in gem bounties this season; the vault's on-chain hit credits cover roughly a quarter of that. PostHog copy time is in the footer line below.",
+      });
       $("poolStats").innerHTML = poolCards.map(c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("")
-      + `<div class="pool-age">these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
+      + `<div class="pool-age">these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
     if (hall && (hall.topsE || hall.tops)) {

@@ -209,4 +209,30 @@ if (poolsJ) {
 } else {
   console.log("pools fetch failed — hist not touched");
 }
+
+// game's own server-side event dashboard (public PostHog share link) — quantifies what the chain
+// cannot see: arcade keys by source (Robinhood-chain relay buys leave no Abstract trace, verified
+// 22.09: on-chain season KP ≈ the "Abstract" bucket only) and gems the server paid (≈4x the vault WIN credits)
+try {
+  const ins = async id => {
+    const r = await fetch(`https://us.posthog.com/api/environments/569134/insights/${id}/?from_dashboard=2114550&sharing_access_token=i2BtIlfGANozI7OO_cm1rIA2JKbPGg`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(30000) });
+    if (!r.ok) throw new Error("insight " + id + ": HTTP " + r.status);
+    const j = await r.json();
+    if (!Array.isArray(j.result)) throw new Error("insight " + id + ": no result");
+    return j.result;
+  };
+  const ks = await ins(12041385); // keys purchased by source, since season start
+  const gem = await ins(12040502); // gems paid, cumulative USD by day
+  const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
+  const keysAbstract = row(ks, "Abstract"), keysRobinhood = row(ks, "Robinhood");
+  const gemsPaidUsd = gem.length ? Number(gem[gem.length - 1][1]) : 0;
+  if (keysAbstract + keysRobinhood + gemsPaidUsd > 0) {
+    fs.writeFileSync(path.join(DATA, "posthog.json"), JSON.stringify({
+      t: new Date().toISOString(),
+      keysAbstract, keysRobinhood, keysTotal: keysAbstract + keysRobinhood,
+      gemsPaidUsd, gemsAt: gem.length ? String(gem[gem.length - 1][0]) : null,
+    }));
+    console.log("posthog.json: keys " + (keysAbstract + keysRobinhood).toLocaleString("en-US") + " (robinhood " + keysRobinhood.toLocaleString("en-US") + ") · gems paid $" + gemsPaidUsd);
+  } else console.log("posthog payload empty — file not touched");
+} catch (e) { console.log("posthog fetch failed:", e.message); }
 console.log(`hall.json: ${Object.keys(out.wallets).length} wallets, scanned ${scanned} new events, head ${head}`);
