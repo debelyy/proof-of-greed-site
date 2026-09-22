@@ -120,7 +120,16 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .stat-ic{position:absolute; top:10px; right:10px; width:20px; height:20px; image-rendering:pixelated; opacity:.75}
 .hcol h3 img{width:14px; height:14px; image-rendering:pixelated; vertical-align:-2px; margin-right:7px; opacity:.85}
 .hall-note{font-size:15px; color:var(--muted); line-height:1.4}
-.receipt-legend{font-size:15px; color:var(--muted); text-align:center; line-height:1.5}
+.receipt-legend{font-size:15px; color:var(--muted); text-align:center; line-height:1.5; max-width:860px; margin:0 auto}
+.verifyrow{font-size:15px; color:var(--muted); text-align:center; line-height:1.6; margin:10px auto 0; max-width:860px; padding-bottom:6px}
+.verifyrow a{color:var(--violet)}
+.verifyrow .glyph{color:var(--gold)}
+.howto{margin:26px auto 0; max-width:1020px; border:2px solid var(--line); background:#15122a; padding:14px 18px}
+.howto summary{font-family:var(--px); font-size:11px; color:var(--gold); letter-spacing:.05em; cursor:pointer; user-select:none}
+.howto-body{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:12px}
+.howto-col h4{font-family:var(--px); font-size:10px; color:var(--green); margin:4px 0 8px; letter-spacing:.04em}
+.howto-col p{font-size:15px; color:var(--muted); line-height:1.55; margin:0 0 8px}
+.howto-col b{color:var(--ink)}
 .hint{font-size:15px; color:var(--muted); text-align:center; letter-spacing:.02em; line-height:1.5}
 .hint span{display:inline-block; white-space:nowrap; margin:0 5px}
 .ptr{font-family:var(--px); font-size:9px; color:var(--gold); letter-spacing:.06em; text-align:center; line-height:1.6}
@@ -291,7 +300,39 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <button id="again" class="btn-ghost">PRINT ANOTHER</button>
       <button id="fresh" class="btn-ghost" title="ignore cache, re-read chain">↻ REFRESH</button>
     </div>
+    <div class="verifyrow" id="verifyRow" hidden>
+      <span class="glyph">⧉</span> don't trust us — <a id="verifyLink" href="#" target="_blank" rel="noopener">check this wallet's transactions on the explorer</a> · every number above is a raw log of <a href="https://explorer.mainnet.abs.xyz/address/0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA" target="_blank" rel="noopener">the vault</a>, <a href="https://explorer.mainnet.abs.xyz/address/0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03" target="_blank" rel="noopener">the key shops</a> or <a href="https://explorer.mainnet.abs.xyz/address/0x40018Cbb1926dae72DCb315E89AAB7320A191D02" target="_blank" rel="noopener">the claim vault</a>
+    </div>
   </section>
+
+  <details class="howto">
+    <summary>▸ HOW IT COUNTS — sources, blind spots, approximations</summary>
+    <div class="howto-body">
+      <div class="howto-col">
+        <h4>COUNTED ON-CHAIN (per wallet)</h4>
+        <p><b>Key buys</b> — KeysPurchased logs of both key shops, $1/key at the game's own price; ETH-era legacy shop (0.001 ETH/key) counted at $1 face, the ETH amount shown on the receipt.</p>
+        <p><b>VALOR top-ups</b> — deposit logs of the valorVault (USDC in, 100 VALOR = $1 peg).</p>
+        <p><b>Cash-outs</b> — withdrawal logs: USDC transferred to you in the same tx, after the game's 5% fee.</p>
+        <p><b>ETH bounties &amp; jackpots</b> — claim logs of the claim vault: real ETH sent to your wallet since the game's launch (03.02.2026). ~930 ETH paid to 11.5k wallets all-time; matches the game's API within 1%.</p>
+        <p><b>Hits</b> — win-credit logs of the vault (bounty/gem/throne USD credits).</p>
+      </div>
+      <div class="howto-col">
+        <h4>INVISIBLE TO EVERYONE</h4>
+        <p><b>Keys bought inside the game for VALOR</b> — server-side balance, no chain event. No tracker can see them.</p>
+        <p><b>Robinhood-chain relay key buys</b> — the game's server counted ~426k of them this season; they leave no Abstract trace.</p>
+        <p><b>Weekly pool shares &amp; race VALOR</b> — server-side until cashed out (then they appear as a cash-out row).</p>
+        <p><b>EVE keys</b> — fished in Onchain Heroes or traded on the in-game marketplace for VALOR.</p>
+      </div>
+      <div class="howto-col">
+        <h4>APPROXIMATIONS (marked)</h4>
+        <p><b>ETH claims ≈ spot</b> — valued at today's ETH price; historical rates aren't on-chain.</p>
+        <p><b>~24H window</b> — measured live from block timestamps, ±1%.</p>
+        <p><b>Tape ages</b> — live-measured block time; a "~" means an estimate.</p>
+        <p><b>Game-dashboard numbers</b> (pools, server-seen keys, players, corn) — copies of the game's own API/dashboard, timestamps shown; their own ledgers can lag hours.</p>
+        <p><b>Audited 23.09</b> — USDC in = deposits + 93% of key buys (routing); USDC out = withdrawals + 6 ops sweeps exactly; claims ≈ API total. Every money channel reconciled at transaction level.</p>
+      </div>
+    </div>
+  </details>
 </main>
 
 <footer>
@@ -316,7 +357,7 @@ const CFG = {
   RPC: "https://api.mainnet.abs.xyz",
   VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
   CLAIM_VAULT: "0x40018Cbb1926dae72DCb315E89AAB7320A191D02", // pays ETH bounties+jackpots ON-CHAIN since game launch; verified 22.09: full-history claims ≈ playmog totalDistributedEth within 1%
-  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (≥38.5M→77.9M; pre-DEPLOY buys ARE counted now — the shop and the claim vault both predate the valorVault; counted at $1/key face); full-chain sig scan 21.09: no third emitter
+  KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (deployed 38,281,282, first buy 38,322,158 → 77.9M; pre-DEPLOY buys ARE counted — the shop and the claim vault both predate the valorVault; counted at $1/key face); full-chain sig scan 21.09: no third emitter
   GAME_START: 38280364, // first claim-vault event = on-chain game launch (03.02.2026); KP+claims scanned from here, VALOR top-ups/cash-outs from DEPLOY_BLOCK
   DEPLOY_BLOCK: 60015914,
   SIG: {
@@ -854,6 +895,8 @@ async function run(wallet, force = false) {
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals - (pl.ethClaimsUsd || 0));
     }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp; window.__POG.printed = true;
+    $("verifyLink").href = "https://explorer.mainnet.abs.xyz/address/" + pl.wallet;
+    $("verifyRow").hidden = false;
     await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
     drawReceipt(pl);
     const v = verdictOf(pl);
@@ -921,7 +964,7 @@ $("taunt").addEventListener("click", () => {
 });
 $("addr").addEventListener("keydown", e => { if (e.key === "Enter" && !$("go").disabled) run(e.target.value); });
 document.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { if (!c.dataset.a) return; $("addr").value = c.dataset.a; run(c.dataset.a); }));
-$("again").addEventListener("click", () => { drawBlank(); $("verdictRow").hidden = true; $("actionsRow").hidden = true; statusEl.textContent = ""; $("statusMore").textContent = ""; $("addr").value = ""; $("addr").focus(); $("checker").scrollIntoView({ behavior: "smooth", block: "center" }); });
+$("again").addEventListener("click", () => { drawBlank(); $("verdictRow").hidden = true; $("actionsRow").hidden = true; $("verifyRow").hidden = true; statusEl.textContent = ""; $("statusMore").textContent = ""; $("addr").value = ""; $("addr").focus(); $("checker").scrollIntoView({ behavior: "smooth", block: "center" }); });
 $("fresh").addEventListener("click", () => { const a = $("addr").value.trim() || (lastPL && lastPL.wallet); if (a) run(a, true); });
 $("dl").addEventListener("click", e => {
   const cv = $("cv");
@@ -1094,15 +1137,33 @@ async function tryPosthogLive() {
       if (!Array.isArray(j.result)) throw new Error("no result");
       return j.result;
     };
-    const ks = await ins(12041385);
-    const gem = await ins(12040502);
+    const [ks, gem, pl, corn, unc] = await Promise.all([ins(12041385), ins(12040502), ins(12038679), ins(12038724), ins(12039551)]);
     const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
+    const one = a => (Array.isArray(a) && a.length && Array.isArray(a[0]) ? Number(a[0][0]) : 0);
     const ka = row(ks, "Abstract"), kr = row(ks, "Robinhood");
     const gems = gem.length ? Number(gem[gem.length - 1][1]) : 0;
-    if (!(ka || kr || gems)) return;
-    PH.keysAbstract = ka; PH.keysRobinhood = kr; PH.keysTotal = ka + kr; PH.gemsPaidUsd = gems; PH.t = new Date().toISOString(); PH.live = true;
-    const card = [...document.querySelectorAll("#poolStats .stat")].find(x => x.textContent.includes("SERVER-SEEN"));
-    if (card) card.outerHTML = statCard(phCard());
+    const players = one(pl), cornEarned = one(corn), cornUncommittedPct = one(unc);
+    if (!(ka || kr || gems || players || cornEarned)) return;
+    PH.keysAbstract = ka; PH.keysRobinhood = kr; PH.keysTotal = ka + kr; PH.gemsPaidUsd = gems;
+    if (players) PH.players = players;
+    if (cornEarned) PH.cornEarned = cornEarned;
+    if (cornUncommittedPct) PH.cornUncommittedPct = cornUncommittedPct;
+    PH.t = new Date().toISOString(); PH.live = true;
+    const grid = $("poolStats");
+    if (grid) {
+      // rebuild the PH-derived cards in place (server-seen, players, corn), keep the rest
+      for (const label of ["SERVER-SEEN", "SEASON PLAYERS", "CORN EARNED"]) {
+        const el = [...grid.querySelectorAll(".stat")].find(x => x.textContent.includes(label));
+        if (el) el.remove();
+      }
+      const age = [...grid.querySelectorAll(".pool-age")].find(x => x.textContent.includes("posthog"));
+      const anchor = age || grid.lastElementChild;
+      const mk = document.createElement("div");
+      mk.innerHTML = statCard(phCard())
+        + (PH.players ? statCard({ lbl: "SEASON PLAYERS", val: PH.players.toLocaleString("en-US"), sub: "per the game's own event dashboard · live", ic: "art/icons/marble.png", why: "Unique wallets the game's server saw buying keys or passes this event, straight from its own event dashboard (PostHog). We can't get this from the chain - a wallet with a gas-less session may leave no trace." }) : "")
+        + (PH.cornEarned ? statCard({ lbl: "CORN EARNED · SEASON", val: (PH.cornEarned >= 1e6 ? (PH.cornEarned / 1e6).toFixed(1) + "M" : Math.round(PH.cornEarned).toLocaleString("en-US")), sub: (PH.cornUncommittedPct ? PH.cornUncommittedPct.toFixed(0) + "% still uncommitted" : "golden corn, all modes") + " · game dashboard · live", ic: "art/icons/corn.png", why: "Golden Corn earned in the race so far, per the game's own dashboard. The share not yet committed to the Silo or the raffle is still in play - every 1 unspent corn is a live decision until 28.09 16:00 UTC." }) : "");
+      while (mk.firstElementChild) grid.insertBefore(mk.firstElementChild, anchor);
+    }
     const ages = [...document.querySelectorAll(".pool-age")].filter(x => x.textContent.includes("posthog"));
     for (const a of ages) a.innerHTML = a.innerHTML.replace(/posthog \d\d:\d\d UTC(?! · LIVE)/, "posthog " + PH.t.slice(11, 16) + " UTC · LIVE");
   } catch {}
@@ -1135,6 +1196,20 @@ async function loadData() {
         { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total. Cross-check: our on-chain claim-vault scan sees ~930 ETH of bounty+jackpot payouts over the game's history - within 1% of this API's all-time total." },
       );
       if (PH) poolCards.push(phCard());
+      if (PH && PH.players) poolCards.push({
+        lbl: "SEASON PLAYERS",
+        val: PH.players.toLocaleString("en-US"),
+        sub: "per the game's own event dashboard" + (PH.live ? " · live" : ""),
+        ic: "art/icons/marble.png",
+        why: "Unique wallets the game's server saw buying keys or passes this event, straight from its own event dashboard (PostHog). We can't get this from the chain - a wallet with a gas-less session may leave no trace.",
+      });
+      if (PH && PH.cornEarned) poolCards.push({
+        lbl: "CORN EARNED · SEASON",
+        val: (PH.cornEarned >= 1e6 ? (PH.cornEarned / 1e6).toFixed(1) + "M" : Math.round(PH.cornEarned).toLocaleString("en-US")),
+        sub: (PH.cornUncommittedPct ? PH.cornUncommittedPct.toFixed(0) + "% still uncommitted" : "golden corn, all modes") + " · game dashboard" + (PH.live ? " · live" : ""),
+        ic: "art/icons/corn.png",
+        why: "Golden Corn earned in the race so far, per the game's own dashboard. The share not yet committed to the Silo or the raffle is still in play - every 1 unspent corn is a live decision until 28.09 16:00 UTC.",
+      });
       const pAgeH = pools.t ? (Date.now() - Date.parse(pools.t)) / 3600000 : 99;
       const pStale = pAgeH > 5 ? `⚠ STALE ${pAgeH >= 10 ? Math.round(pAgeH) : pAgeH.toFixed(1)}h — ` : "";
       $("poolStats").innerHTML = poolCards.map(statCard).join("")

@@ -27,7 +27,7 @@ const SIG = {
   CLAIM_B: "0x1ddd787c0b3d99344f6639d640b2d991e29512c85c952d530fbbe953328fb9c7", // (player, ethWei) bounty/gem payout
   CLAIM_J: "0x05b8b3cb6d59baf0ddb206b0927090ec793e2eab7bf5cf0d61a1d8db7f3f3362", // (player, ethWei) jackpot payout
 };
-// key shops: current USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, ≥38.5M→77.9M, counted at $1 face; pre-DEPLOY buys backfilled — true lifetime); KeysPurchased(buyer, qty, pricePerKey, totalPaid)
+// key shops: current USDC/ETH shop (77.9M→head) + legacy ETH shop (0.001 ETH/key, deployed 38,281,282 / first buy 38,322,158 → 77.9M, counted at $1 face; pre-DEPLOY buys backfilled — true lifetime); KeysPurchased(buyer, qty, pricePerKey, totalPaid)
 const KEY_SHOPS = ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"];
 const KP = "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089";
 const CHUNK = 100_000;
@@ -279,16 +279,22 @@ try {
   };
   const ks = await ins(12041385); // keys purchased by source, since season start
   const gem = await ins(12040502); // gems paid, cumulative USD by day
+  const pl = await ins(12038679); // total event players
+  const corn = await ins(12038724); // golden corn earned
+  const unc = await ins(12039551); // uncommitted golden corn %
   const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
+  const one = a => (Array.isArray(a) && a.length && Array.isArray(a[0]) ? Number(a[0][0]) : 0);
   const keysAbstract = row(ks, "Abstract"), keysRobinhood = row(ks, "Robinhood");
   const gemsPaidUsd = gem.length ? Number(gem[gem.length - 1][1]) : 0;
-  if (keysAbstract + keysRobinhood + gemsPaidUsd > 0) {
+  const players = one(pl), cornEarned = one(corn), cornUncommittedPct = one(unc);
+  if (keysAbstract + keysRobinhood + gemsPaidUsd + players + cornEarned > 0) {
     fs.writeFileSync(path.join(DATA, "posthog.json"), JSON.stringify({
       t: new Date().toISOString(),
       keysAbstract, keysRobinhood, keysTotal: keysAbstract + keysRobinhood,
       gemsPaidUsd, gemsAt: gem.length ? String(gem[gem.length - 1][0]) : null,
+      players, cornEarned, cornUncommittedPct,
     }));
-    console.log("posthog.json: keys " + (keysAbstract + keysRobinhood).toLocaleString("en-US") + " (robinhood " + keysRobinhood.toLocaleString("en-US") + ") · gems paid $" + gemsPaidUsd);
+    console.log("posthog.json: keys " + (keysAbstract + keysRobinhood).toLocaleString("en-US") + " (robinhood " + keysRobinhood.toLocaleString("en-US") + ") · gems paid $" + gemsPaidUsd + " · players " + players + " · corn " + cornEarned + " (" + cornUncommittedPct + "% uncommitted)");
   } else console.log("posthog payload empty — file not touched");
 } catch (e) { console.log("posthog fetch failed:", e.message); }
 console.log(`hall.json: ${Object.keys(out.wallets).length} wallets, scanned ${scanned} new events, head ${head}`);
