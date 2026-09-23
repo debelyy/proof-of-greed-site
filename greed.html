@@ -900,6 +900,13 @@ function busy(on) {
 }
 function fail(msg) { statusEl.className = "err"; statusEl.textContent = "x " + msg; }
 
+const serverRowOf = wallet => {
+  if (!SERVER) return null;
+  const a = SERVER.racers && SERVER.racers[String(wallet).toLowerCase()];
+  if (a) return { rank: a[0], treasure: a[1], runCount: a[2], totalKeysSpent: a[3] };
+  const s = SERVER.top && SERVER.top.find(r => r.address.toLowerCase() === String(wallet).toLowerCase());
+  return s ? { rank: s.rank, treasure: s.treasure, runCount: s.runCount, totalKeysSpent: s.totalKeysSpent } : null;
+};
 async function run(wallet, force = false) {
   wallet = wallet.trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) { fail("that's not an EVM address (need 0x + 40 hex)"); return; }
@@ -926,13 +933,6 @@ async function run(wallet, force = false) {
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE + (w.ethE || 0) * sp : w.cashed - w.fed + (w.eth || 0) * sp)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals - (pl.ethClaimsUsd || 0));
     }
-const serverRowOf = wallet => {
-  if (!SERVER) return null;
-  const a = SERVER.racers && SERVER.racers[String(wallet).toLowerCase()];
-  if (a) return { rank: a[0], treasure: a[1], runCount: a[2], totalKeysSpent: a[3] };
-  const s = SERVER.top && SERVER.top.find(r => r.address.toLowerCase() === String(wallet).toLowerCase());
-  return s ? { rank: s.rank, treasure: s.treasure, runCount: s.runCount, totalKeysSpent: s.totalKeysSpent } : null;
-};
     // the game's own server ledger (bot's signed-in weekly copy): treasure/rank/keys the chain never sees
     {
       const s = serverRowOf(wallet); // full racers map (all weekly players), not just the top-100
