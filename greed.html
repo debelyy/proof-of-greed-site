@@ -1178,7 +1178,7 @@ function renderServerBoards() {
 const statCard = c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`;
 /* corn race + raffles: the game's server is the ONLY ledger for these (corn never touches the chain);
    aggregates only — the dashboard deliberately exposes no player-level data */
-const kM = v => v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.round(v).toLocaleString("en-US");
+const kM = v => v >= 1e9 ? (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.round(v).toLocaleString("en-US");
 function renderRace() {
   if (!PH || !(PH.cornContrib || PH.raffleEntries || PH.eveBurned || PH.cornUncommitted)) return;
   const cards = [];
