@@ -238,6 +238,18 @@ const out = {
     return [a, { fed: r2(w.fed), keys: r2(w.keys || 0), cashed: r2(w.cashed), hits: r2(w.hits), big: r2(w.big || 0), last: w.last || 0, eth: r2(w.eth || 0), fedE: r2(w.fedE), keysE: r2(w.keysE || 0), cashedE: r2(w.cashedE), hitsE: r2(w.hitsE), bigE: r2(w.bigE || 0), ethE: r2(w.ethE || 0), wkFed: r2(w.wkFed), wkKeys: r2(w.wkKeys || 0), wkHits: r2(w.wkHits), wkCashed: r2(w.wkCashed) }];
   })),
 };
+// game usernames for the hall boards — playmog's public profile API (no login; NO CORS, so only this
+// server-side bot can call it). Verified 23.09: returns {username, profilePictureUrl} or 404.
+const topAddrs = [...new Set([...out.tops.net, ...out.tops.hits, ...out.tops.fed, ...out.topsE.net, ...out.topsE.hits, ...out.topsE.fed].map(r => r.a))];
+out.nicks = {};
+for (const a of topAddrs.slice(0, 40)) {
+  try {
+    const r = await fetch("https://playmog.xyz/api/profile/" + a, { headers: { "User-Agent": "Mozilla/5.0 mog-data/1.0" }, signal: AbortSignal.timeout(10000) });
+    if (r.ok) { const j = await r.json(); if (j && j.username) out.nicks[a] = j.username; }
+  } catch {}
+  await new Promise(s => setTimeout(s, 150)); // stay polite to the game's API
+}
+console.log("nicks resolved: " + Object.keys(out.nicks).length + "/" + topAddrs.length + " (steezy, hishow & co)");
 fs.writeFileSync(path.join(DATA, "hall.json"), JSON.stringify(out));
 fs.writeFileSync(path.join(DATA, "state.json"), JSON.stringify(state));
 
@@ -282,19 +294,52 @@ try {
   const pl = await ins(12038679); // total event players
   const corn = await ins(12038724); // golden corn earned
   const unc = await ins(12039551); // uncommitted golden corn %
+  const cc = await ins(12038725); // corn leaderboard — total contributed
+  const ccn = await ins(12038726); // corn contributors
+  const re = await ins(12038728); // corn raffle — net entries
+  const ren = await ins(12038741); // corn raffle — entrants
+  const uc = await ins(12039542); // uncommitted golden corn (absolute)
+  const eb = await ins(12039227); // EVE items burned
+  const ebn = await ins(12039228); // EVE item contributors
+  const er = await ins(12039229); // EVE key raffle — total entries
+  const fr = await ins(12038753); // event data freshness (per-source sync stamps)
   const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
   const one = a => (Array.isArray(a) && a.length && Array.isArray(a[0]) ? Number(a[0][0]) : 0);
   const keysAbstract = row(ks, "Abstract"), keysRobinhood = row(ks, "Robinhood");
   const gemsPaidUsd = gem.length ? Number(gem[gem.length - 1][1]) : 0;
   const players = one(pl), cornEarned = one(corn), cornUncommittedPct = one(unc);
-  if (keysAbstract + keysRobinhood + gemsPaidUsd + players + cornEarned > 0) {
-    fs.writeFileSync(path.join(DATA, "posthog.json"), JSON.stringify({
-      t: new Date().toISOString(),
-      keysAbstract, keysRobinhood, keysTotal: keysAbstract + keysRobinhood,
-      gemsPaidUsd, gemsAt: gem.length ? String(gem[gem.length - 1][0]) : null,
-      players, cornEarned, cornUncommittedPct,
-    }));
-    console.log("posthog.json: keys " + (keysAbstract + keysRobinhood).toLocaleString("en-US") + " (robinhood " + keysRobinhood.toLocaleString("en-US") + ") · gems paid $" + gemsPaidUsd + " · players " + players + " · corn " + cornEarned + " (" + cornUncommittedPct + "% uncommitted)");
+  const cornContrib = one(cc), cornContribN = one(ccn), raffleEntries = one(re), raffleEntrants = one(ren);
+  const cornUncommitted = one(uc), eveBurned = one(eb), eveBurnedN = one(ebn), eveRaffle = one(er);
+  // freshness rows are [label, iso-ts]; the corn row is the race's own sync stamp
+  const frRow = (Array.isArray(fr) ? fr.find(x => /corn/i.test(String(x && x[0]))) : null) || (Array.isArray(fr) ? fr[0] : null);
+  const fresh = frRow && frRow[1] ? String(frRow[1]).slice(11, 16) : "";
+  // a renamed/removed dashboard bucket reads as 0 — keep the last good copy instead of publishing a silent zero
+  const old = readJson("posthog.json", {});
+  const keysOK = keysAbstract > 0 && keysRobinhood > 0;
+  const nz = (v, o) => (v > 0 ? v : (old[o] ?? 0));
+  const safe = {
+    keysAbstract: keysOK ? keysAbstract : (old.keysAbstract ?? 0),
+    keysRobinhood: keysOK ? keysRobinhood : (old.keysRobinhood ?? 0),
+    keysTotal: keysOK ? keysAbstract + keysRobinhood : (old.keysTotal ?? 0),
+    gemsPaidUsd: nz(gemsPaidUsd, "gemsPaidUsd"),
+    gemsAt: gem.length ? String(gem[gem.length - 1][0]) : (old.gemsAt ?? null),
+    players: nz(players, "players"),
+    cornEarned: nz(cornEarned, "cornEarned"),
+    cornUncommittedPct: nz(cornUncommittedPct, "cornUncommittedPct"),
+    cornContrib: nz(cornContrib, "cornContrib"),
+    cornContribN: nz(cornContribN, "cornContribN"),
+    raffleEntries: nz(raffleEntries, "raffleEntries"),
+    raffleEntrants: nz(raffleEntrants, "raffleEntrants"),
+    rafflePer: raffleEntries > 0 && raffleEntrants > 0 ? raffleEntries / raffleEntrants : (old.rafflePer ?? 0),
+    cornUncommitted: nz(cornUncommitted, "cornUncommitted"),
+    eveBurned: nz(eveBurned, "eveBurned"),
+    eveBurnedN: nz(eveBurnedN, "eveBurnedN"),
+    eveRaffle: nz(eveRaffle, "eveRaffle"),
+    fresh: fresh || (old.fresh ?? ""),
+  };
+  if (safe.keysTotal + safe.gemsPaidUsd + safe.players + safe.cornEarned > 0) {
+    fs.writeFileSync(path.join(DATA, "posthog.json"), JSON.stringify({ t: new Date().toISOString(), ...safe }));
+    console.log("posthog.json: keys " + safe.keysTotal.toLocaleString("en-US") + " (robinhood " + safe.keysRobinhood.toLocaleString("en-US") + ") · gems paid $" + safe.gemsPaidUsd + " · players " + safe.players + " · corn " + safe.cornEarned + " (" + safe.cornUncommittedPct + "% uncommitted) · race " + safe.cornContrib + " committed / raffle " + safe.raffleEntries + " by " + safe.raffleEntrants + (keysOK ? "" : " · KEYS BUCKETS MISSING — kept old copy"));
   } else console.log("posthog payload empty — file not touched");
 } catch (e) { console.log("posthog fetch failed:", e.message); }
 console.log(`hall.json: ${Object.keys(out.wallets).length} wallets, scanned ${scanned} new events, head ${head}`);

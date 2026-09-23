@@ -63,6 +63,11 @@ h1{
 @keyframes floaty{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
 
 main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display:flex; flex-direction:column; gap:26px; align-items:center; position:relative; z-index:2}
+/* the product leads: wallet form + receipt print above the telemetry wall (flex order, no DOM surgery) */
+main > *{order:10}
+main > #checker{order:1}
+main > #stage{order:2}
+main > .howto{order:20}
 /* ══ NES-style panel ══ */
 .panel{
   width:100%; background:var(--panel); position:relative;
@@ -124,7 +129,7 @@ button:disabled{filter:grayscale(.7) brightness(.65); cursor:wait; transform:non
 .verifyrow{font-size:15px; color:var(--muted); text-align:center; line-height:1.6; margin:10px auto 0; max-width:860px; padding-bottom:6px}
 .verifyrow a{color:var(--violet)}
 .verifyrow .glyph{color:var(--gold)}
-.howto{margin:26px auto 0; max-width:1020px; border:2px solid var(--line); background:#15122a; padding:14px 18px}
+.howto{margin:26px auto 0; width:100%; max-width:100%; border:2px solid var(--line); background:#15122a; padding:14px 18px}
 .howto summary{font-family:var(--px); font-size:11px; color:var(--gold); letter-spacing:.05em; cursor:pointer; user-select:none}
 .howto-body{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:12px}
 .howto-col h4{font-family:var(--px); font-size:10px; color:var(--green); margin:4px 0 8px; letter-spacing:.04em}
@@ -169,16 +174,17 @@ canvas{width:100%; height:auto; display:block}
   box-shadow:0 0 0 4px #0a0813, 10px 10px 0 rgba(0,0,0,.5); padding:22px;
   display:flex; flex-direction:column; gap:16px;
 }
-.live-head{font-family:var(--px); font-size:11px; color:var(--green); display:flex; gap:10px; align-items:center; letter-spacing:.08em}
+.live-head{font-family:var(--px); font-size:11px; color:var(--green); display:flex; gap:10px; align-items:center; letter-spacing:.08em; flex-wrap:wrap; row-gap:5px}
 .live-head .age{margin-left:auto; color:var(--muted); font-family:var(--term); font-size:16px; letter-spacing:.04em}
 .dot{width:10px; height:10px; background:var(--green); animation:blink 1.2s steps(1) infinite; flex:none}
 .dot.gold{background:var(--gold)}
-.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px}
+/* fixed tracks, never auto-fit: rows must stay symmetric (4+4 desktop, 2+2… mobile) */
+.stats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px}
 #statsWrap{display:flex; flex-direction:column; gap:12px}
-.stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px; min-height:148px}
+.stat{background:#0a0813; border:2px solid var(--line); padding:12px 14px; min-height:148px; display:flex; flex-direction:column}
 .stat .lbl{font-size:15px; color:var(--muted); letter-spacing:.1em; padding-right:26px}
 .stat .val{font-family:var(--px); font-size:clamp(10px,3.3vw,13px); color:var(--gold); margin-top:9px; line-height:1.4; white-space:nowrap}
-.stat .sub{font-size:15px; color:var(--muted); margin-top:7px}
+.stat .sub{font-size:15px; color:var(--muted); margin-top:auto; padding-top:7px}
 .feed{display:flex; flex-direction:column; gap:8px}
 .fitem{
   display:flex; gap:12px; align-items:center; background:#0a0813; padding:10px 14px;
@@ -211,16 +217,19 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   .panel{grid-template-columns:1fr}
   .cast{flex-direction:row; justify-content:center; min-width:0}
   .cast .bubble{max-width:220px}
-  .scope{flex-direction:column}
-  .scope-btn{font-size:9px; padding:10px 8px}
+  .scope{flex-direction:row}
+  .scope-btn{font-size:8px; padding:10px 6px; letter-spacing:.02em}
   .fitem .verb{display:none}
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .stat{min-height:0}
+  /* the tape legend gets its own line instead of squeezing the title into a column */
+  .live-head .age{flex-basis:100%; margin-left:0}
   .chip{padding:9px 12px; font-size:16px}
   .actions{flex-direction:column; align-items:stretch}
 }
-#wkReset{font-size:12px}
+#wkReset{font-size:10px} /* "1d 06h 48m" at 12px overflowed the 146px card (nowrap, PS2P) */
 #status:empty{display:none}
 .hrow .r{color:#9c94bc}
 .hall-note{font-size:17px}
@@ -246,7 +255,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
 
 <main>
   <section class="livebox">
-    <div class="live-head"><span class="dot gold"></span><span class="why" data-why="Latest on-chain moves only. Game-server actions (server key buys, claims, drops) never appear here - no tracker can see them.">TAPE OF THE MAZE</span><span class="age">◆ key buy · ▲ top-up · ▼ cash-out · ★ hit · only what the chain sees · every 45s</span></div>
+    <div class="live-head"><span class="dot gold"></span><span class="why" data-why="Latest on-chain moves only. Game-server actions (server key buys, claims, drops) never appear here - no tracker can see them.">TAPE OF THE MAZE</span><span class="age">◆ buy · ▲ top-up · ▼ cash-out · ★ hit · chain-only · 45s</span></div>
     <div class="feed" id="feed"></div>
   </section>
 
@@ -256,6 +265,12 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     <div class="pool-age">counted live from the Abstract chain, last ~24 hours · keys bought inside the game server (VALOR, free claims, drops) never touch the chain and can't appear here — no tracker can see them</div>
     <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · game-server numbers, copied by our bot (time below)</div>
     <div class="stats" id="poolStats"></div>
+  </section>
+
+  <section class="livebox" id="raceBox" hidden>
+    <div class="live-head"><span class="dot gold"></span>CORN RACE &amp; RAFFLES · the game's own ledger<span class="age" id="raceAge"></span></div>
+    <div class="stats" id="raceStats"></div>
+    <div class="pool-age" id="raceNote">corn and raffle numbers live in the game's server only — the chain never sees them · per the game's own event dashboard · raffle pays after the season ends 28.09 16:00 UTC</div>
   </section>
 
   <section class="livebox" id="hallBox" hidden>
@@ -276,7 +291,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       </div>
       <div class="ptr"><span class="ar">▼</span> paste your in-game wallet (playmog profile → address)</div>
       <div class="row">
-        <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="paste your 0x… wallet address">
+        <input id="addr" type="text" spellcheck="false" autocomplete="off" aria-label="wallet address" placeholder="paste your 0x… address">
         <button id="go">PRINT MY RECEIPT</button>
       </div>
       <div class="ptr up"><span class="ar">▲</span> one click — and the maze judges you</div>
@@ -517,9 +532,11 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
   const net = withdrawals + ethClaimsUsd - fed;
   const all = [...dep, ...wd, ...win, ...kb, ...cl];
   const biggest = win.length ? win.reduce((a, b) => (b.usd > a.usd ? b : a)) : null;
+  // single largest ETH bounty/jackpot claim — a big ETH payout is a bigger real win than any credit
+  const bigClaim = cl.length ? cl.reduce((a, b) => (b.eth > a.eth ? b : a)) : null;
   const first = all.length ? Math.min(...all.map(x => x.block)) : null;
   const last = all.length ? Math.max(...all.map(x => x.block)) : null;
-  const tsBlocks = [...new Set([biggest?.block, first, last].filter(Boolean))];
+  const tsBlocks = [...new Set([biggest?.block, bigClaim?.block, first, last].filter(Boolean))];
   const tsMap = {};
   await Promise.all(tsBlocks.map(async b => { tsMap[b] = await blockTime(b); }));
   return {
@@ -528,6 +545,7 @@ async function buildPL(wallet, ev, fromBlock, toBlock, scopeLabel) {
     paperNet: withdrawals + ethClaimsUsd + wins - fed,
     nDep: dep.length, nKeys: kb.length, nWd: wd.length, nWin: win.length,
     biggest: biggest ? { usd: biggest.usd, at: tsMap[biggest.block] } : null,
+    bigClaim: bigClaim ? { eth: bigClaim.eth, usd: bigClaim.eth * spot, at: tsMap[bigClaim.block] } : null,
     firstAt: first ? tsMap[first] : null,
     lastAt: last ? tsMap[last] : null,
     head: ev.head,
@@ -602,6 +620,8 @@ function drawReceipt(pl) {
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
   else if (!noHit) L.push({ k: "row", l: `  HITS x${pl.nWin}`, r: money(pl.wins) });
   if (pl.biggest) L.push({ k: "row", l: `  BIGGEST HIT ${dateStr(pl.biggest.at)}`, r: money(pl.biggest.usd), accent: GOLD });
+  if (pl.bigClaim && pl.bigClaim.usd > ((pl.biggest && pl.biggest.usd) || 0) + 0.005)
+    L.push({ k: "row", l: M ? `  BIGGEST PAYOUT (ETH) ${dateStr(pl.bigClaim.at)}` : `  BIGGEST PAYOUT — ETH BOUNTY/JACKPOT ${dateStr(pl.bigClaim.at)}`, r: pl.bigClaim.eth.toFixed(3) + " ETH ≈ " + money(pl.bigClaim.usd), accent: GOLD });
   if (pl.rankHits && (pl.nDep || pl.nKeys || pl.nWd || pl.nWin)) {
     if (pl.riding > 0.005) L.push({ k: "row", l: M ? "  ON-CHAIN UNCASHED" : "  STILL IN THE MAZE (ON-CHAIN UNCASHED)", r: money(pl.riding), accent: GOLD });
     const bot = HALL && HALL.t ? " · bot " + HALL.t.slice(11, 16) : "";
@@ -888,10 +908,14 @@ async function run(wallet, force = false) {
     const pl = await buildPL(wallet, ev, fromBlock, toBlock, scopeLabel);
     if (HALL && HALL.wallets) {
       const isE = scope === "event";
-      const act = Object.values(HALL.wallets).filter(w => isE ? (w.fedE || w.cashedE || w.hitsE) : (w.fed || w.cashed || w.hits));
+      // eth-only wallets are players too — otherwise the receipt's field contradicts the marquee's wallet count
+      const act = Object.values(HALL.wallets).filter(w => isE ? (w.fedE || w.cashedE || w.hitsE || w.ethE) : (w.fed || w.cashed || w.hits || w.eth));
       pl.fieldN = act.length;
       pl.rankHits = act.filter(w => (isE ? w.hitsE : w.hits) > pl.wins).length + 1;
-      pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE : w.cashed - w.fed)) > pl.net).length + 1;
+      // rank must value hall wallets the same way pl.net values this one: cashed + ETH (at the receipt's spot) − fed,
+      // otherwise the rank row contradicts the TOP NET boards, which already include ETH
+      const sp = pl.ethSpot || 0;
+      pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE + (w.ethE || 0) * sp : w.cashed - w.fed + (w.eth || 0) * sp)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals - (pl.ethClaimsUsd || 0));
     }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp; window.__POG.printed = true;
@@ -931,7 +955,8 @@ function shareText() {
     return `TOURIST · no trace in Maze of Gains yet 🌽 print yours: ${url} #ProofOfGreed #DeedSeason`;
   const hook = `${verdictOf(p).stamp} · NET ${money(p.net, true)} (${p.scope === "DEED SEASON" ? "Deed Season" : "lifetime"})`;
   const rank = p.rankHits ? ` · #${p.rankHits} hits of ${p.fieldN} wallets` : "";
-  const hit = p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "";
+  const bigEth = p.bigClaim && p.bigClaim.usd > ((p.biggest && p.biggest.usd) || 0) + 0.005;
+  const hit = bigEth ? ` · biggest payout ${p.bigClaim.eth.toFixed(2)} ETH ≈ ${money(p.bigClaim.usd)}` : (p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "");
   const eth = p.nClaims ? ` · ${p.ethClaims.toFixed(2)} ETH claimed` : "";
   return `${hook}${rank}${hit}${eth} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
@@ -1053,7 +1078,7 @@ async function liveTick() {
       { lbl: "VAULT TREASURY", val: money(treas), sub: "USDC in vault now · on-chain balanceOf", ic: "art/icons/treasure.png", why: "USDC sitting in the vault contract right now, read from the chain. Not only players money: the game treasury refills it and ops sweeps leave it too." },
       { lbl: "FED IN · 24H", val: money(sum(dep, depUsd) + sum(keys24, kpUsd)), sub: keys24.reduce((x, l) => x + word(l, 0), 0).toLocaleString("en-US") + " keys bought · " + dep.length + " top-ups", ic: "art/icons/key.png", why: "Key buys and top-ups the chain saw in the last ~24 hours (window measured live, plus-minus 1%). Keys bought inside the game server never touch the chain, so they can not be here." },
       { lbl: "VALOR CASHED OUT · 24H", val: money(sum(wd)), sub: wd.length + " cash-out" + (wd.length === 1 ? "" : "s") + " paid in USDC", ic: "art/icons/amber.png", why: "Players sell VALOR back to the game (min 500 VALOR, 5% fee, 24h delay per game rules); the vault pays USDC on-chain - those transfers are exactly what we count here." },
-      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounties/gems/thrones · big returns = Thu pool + ETH jackpots", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. Measured 22.09: this is roughly a QUARTER of the gem value the game server actually paid - the rest is server-side VALOR, visible here only once cashed out. Thursday pool shares are server-side; ETH bounty/jackpot payouts are a separate on-chain channel (claim vault) and DO show in your receipt." },
+      { lbl: "MAZE HITS · 24H", val: money(sum(win)), sub: win.length + " bounty/gem/throne credits", ic: "art/icons/gem.png", why: "Bounty, gem and throne credits the vault logged in ~24 hours. Measured 22.09: this is roughly a QUARTER of the gem value the game server actually paid - the rest is server-side VALOR, visible here only once cashed out. Thursday pool shares are server-side; ETH bounty/jackpot payouts are a separate on-chain channel (claim vault) and DO show in your receipt." },
     ];
     $("stats").innerHTML = cards.map(c =>
       `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val">${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`).join("");
@@ -1089,7 +1114,7 @@ function buildMq() {
     items.push("LIFETIME: " + kUsd(t.fed || 0) + " FED · " + kUsd(t.cashed || 0) + " CASHED · " + kUsd(t.hits || 0) + " HITS");
     if (t.eth > 0.01) items.push("ETH BOUNTIES " + Math.round(t.eth) + " ETH" + (HALL.ethSpot ? " ≈ " + kUsd(t.eth * HALL.ethSpot) : "") + " CLAIMED ON-CHAIN");
   }
-  if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · JACKPOTS " + Math.round(POOLS.jackpotsPaidEth || 0) + " ETH PAID (OFF-CHAIN)");
+  if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · JACKPOTS " + Math.round(POOLS.jackpotsPaidEth || 0) + " ETH · CLAIM VAULT PAYS ON-CHAIN");
   items.push(...MQ_LORE);
   const seq = items.map(s => "<span>" + s + "</span><i>◆</i>").join("");
   $("mq").innerHTML = seq + seq;
@@ -1099,9 +1124,11 @@ function renderHall() {
   if (!HALL || !(HALL.topsE || HALL.tops)) return;
   const isE = scope === "event";
   const T = isE ? (HALL.topsE || HALL.tops) : (HALL.tops || HALL.topsE);
+  // game usernames resolved by the bot from playmog's public profile API; hover shows the raw address
+  const nameOf = a => (HALL.nicks && HALL.nicks[a]) || short(a);
   const col = (cls, title, rows, fmt, ic) =>
     `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
-      `<div class="hrow"><span class="r">${i + 1}</span><span class="a">${short(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
+      `<div class="hrow"><span class="r">${i + 1}</span><span class="a" title="${r.a}">${nameOf(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
   $("hall").innerHTML =
     col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png") +
     col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
@@ -1118,6 +1145,44 @@ function renderHall() {
   $("hallBox").hidden = false;
 }
 const statCard = c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`;
+/* corn race + raffles: the game's server is the ONLY ledger for these (corn never touches the chain);
+   aggregates only — the dashboard deliberately exposes no player-level data */
+const kM = v => v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : Math.round(v).toLocaleString("en-US");
+function renderRace() {
+  if (!PH || !(PH.cornContrib || PH.raffleEntries || PH.eveBurned || PH.cornUncommitted)) return;
+  const cards = [];
+  if (PH.cornContrib) cards.push({
+    lbl: "CORN COMMITTED · SEASON",
+    val: kM(PH.cornContrib),
+    sub: (PH.cornContribN ? PH.cornContribN.toLocaleString("en-US") + " contributors" : "leaderboard total") + " · committed to the race",
+    ic: "art/icons/corn.png",
+    why: "Golden Corn committed to the season leaderboard, per the game's own dashboard. This is the race total the weekly pool and the raffle pay out against; corn itself is a server-side balance the chain never sees.",
+  });
+  if (PH.raffleEntries) cards.push({
+    lbl: "CORN RAFFLE · NET ENTRIES",
+    val: kM(PH.raffleEntries),
+    sub: (PH.raffleEntrants ? PH.raffleEntrants.toLocaleString("en-US") + " entrants" : "") + (PH.rafflePer ? " · avg " + Math.round(PH.rafflePer).toLocaleString("en-US") + " each" : ""),
+    ic: "art/icons/marble.png",
+    why: "Corn burned into the end-of-season raffle (net of refunds, per the game's own audited numbers). Every entry is one ticket - the raffle pays after the season ends 28.09 16:00 UTC.",
+  });
+  if (PH.cornUncommitted) cards.push({
+    lbl: "UNCOMMITTED CORN",
+    val: kM(PH.cornUncommitted),
+    sub: (PH.cornUncommittedPct ? PH.cornUncommittedPct.toFixed(0) + "% of all corn earned" : "still in play") + " · live decisions until 28.09",
+    ic: "art/icons/amber.png",
+    why: "Corn earned but not yet committed to the leaderboard, the Silo or the raffle - the share of the race still up for grabs. Straight from the game's dashboard.",
+  });
+  if (PH.eveBurned) cards.push({
+    lbl: "EVE ITEMS BURNED",
+    val: kM(PH.eveBurned),
+    sub: (PH.eveBurnedN ? PH.eveBurnedN.toLocaleString("en-US") + " contributors" : "") + (PH.eveRaffle ? " · key raffle " + kM(PH.eveRaffle) + " entries" : ""),
+    ic: "art/icons/evekey.png",
+    why: "EVE items burned for the EVE key raffle this season (the game's own count). EVE items themselves are fished in Onchain Heroes or traded in-game - no chain trace on Abstract.",
+  });
+  $("raceStats").innerHTML = cards.map(statCard).join("");
+  $("raceAge").textContent = (PH.fresh ? "game ledger synced " + PH.fresh : "game ledger") + (PH.live ? " · live" : " · bot copy " + (PH.t || "").slice(11, 16) + " UTC");
+  $("raceBox").hidden = false;
+}
 const phCard = () => ({
   lbl: "SERVER-SEEN KEYS · SEASON",
   val: kUsd(PH.keysTotal),
@@ -1137,18 +1202,40 @@ async function tryPosthogLive() {
       if (!Array.isArray(j.result)) throw new Error("no result");
       return j.result;
     };
-    const [ks, gem, pl, corn, unc] = await Promise.all([ins(12041385), ins(12040502), ins(12038679), ins(12038724), ins(12039551)]);
+    const [ks, gem, pl, corn, unc, cc, ccn, re, ren, uc, eb, ebn, er, fr] = await Promise.all([
+      ins(12041385), ins(12040502), ins(12038679), ins(12038724), ins(12039551),
+      ins(12038725), ins(12038726), ins(12038728), ins(12038741), ins(12039542),
+      ins(12039227), ins(12039228), ins(12039229), ins(12038753),
+    ]);
     const row = (a, k) => { const r = a.find(x => x[0] === k); return r ? Number(r[1]) : 0; };
     const one = a => (Array.isArray(a) && a.length && Array.isArray(a[0]) ? Number(a[0][0]) : 0);
     const ka = row(ks, "Abstract"), kr = row(ks, "Robinhood");
     const gems = gem.length ? Number(gem[gem.length - 1][1]) : 0;
     const players = one(pl), cornEarned = one(corn), cornUncommittedPct = one(unc);
+    const cornContrib = one(cc), cornContribN = one(ccn), raffleEntries = one(re), raffleEntrants = one(ren);
+    const cornUncommitted = one(uc), eveBurned = one(eb), eveBurnedN = one(ebn), eveRaffle = one(er);
+    // the game's own per-source sync stamps: "Golden Corn ledger" is the corn row
+    const frRow = (Array.isArray(fr) ? fr.find(x => /corn/i.test(String(x && x[0]))) : null) || (Array.isArray(fr) ? fr[0] : null);
+    const fresh = frRow && frRow[1] ? String(frRow[1]).slice(11, 16) + " UTC" : "";
     if (!(ka || kr || gems || players || cornEarned)) return;
-    PH.keysAbstract = ka; PH.keysRobinhood = kr; PH.keysTotal = ka + kr; PH.gemsPaidUsd = gems;
+    // a renamed/removed dashboard bucket would read as 0 — never overwrite a good copy with a silent zero
+    if (ka > 0 && kr > 0) { PH.keysAbstract = ka; PH.keysRobinhood = kr; PH.keysTotal = ka + kr; }
+    if (gems > 0) PH.gemsPaidUsd = gems;
     if (players) PH.players = players;
     if (cornEarned) PH.cornEarned = cornEarned;
     if (cornUncommittedPct) PH.cornUncommittedPct = cornUncommittedPct;
+    if (cornContrib) PH.cornContrib = cornContrib;
+    if (cornContribN) PH.cornContribN = cornContribN;
+    if (raffleEntries) PH.raffleEntries = raffleEntries;
+    if (raffleEntrants) PH.raffleEntrants = raffleEntrants;
+    if (raffleEntries > 0 && raffleEntrants > 0) PH.rafflePer = raffleEntries / raffleEntrants;
+    if (cornUncommitted) PH.cornUncommitted = cornUncommitted;
+    if (eveBurned) PH.eveBurned = eveBurned;
+    if (eveBurnedN) PH.eveBurnedN = eveBurnedN;
+    if (eveRaffle) PH.eveRaffle = eveRaffle;
+    if (fresh) PH.fresh = fresh;
     PH.t = new Date().toISOString(); PH.live = true;
+    renderRace();
     const grid = $("poolStats");
     if (grid) {
       // rebuild the PH-derived cards in place (server-seen, players, corn), keep the rest
@@ -1169,32 +1256,40 @@ async function tryPosthogLive() {
   } catch {}
 }
 
-async function loadData() {
+async function loadData({ light = false } = {}) {
   if (location.protocol === "file:") return;
   try {
     const nb = "?" + Date.now();
+    // light refresh (10-min interval) skips hall.json: ~1MB gzipped, the bot rewrites it only a few times a day
+    // every fetch carries a timeout: one stalled file must never freeze the whole data layer (pools/hall/posthog)
+    const jf = f => fetch(f + nb, { cache: "no-store", signal: AbortSignal.timeout(8000) }).then(r => (r.ok ? r.json() : null)).catch(() => null);
     const [pools, hall, hist, ph] = await Promise.all([
-      fetch("data/pools.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
-      fetch("data/hall.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
-      fetch("data/pools_hist.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
-      fetch("data/posthog.json" + nb, { cache: "no-store" }).then(r => (r.ok ? r.json() : null)).catch(() => null),
+      jf("data/pools.json"),
+      light ? null : jf("data/hall.json"),
+      jf("data/pools_hist.json"),
+      jf("data/posthog.json"),
     ]);
     if (pools) POOLS = pools;
     if (hist) PHIST = hist;
     if (ph && ph.keysTotal != null) PH = ph;
+    if (hall && (hall.topsE || hall.tops)) HALL = hall; // before the pools grid: the chain-vs-server card reads it
     if (pools) {
       const lw = PHIST && PHIST.lastWeek;
       const wn = Number(pools.weekNumber);
-      const resetStr = pools.weekEnd ? new Date(Date.parse(pools.weekEnd)).toISOString().slice(5, 10) + " 16:00 UTC" : "pending";
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn, ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified: the API itself can lag minutes, and our bot copies it only a few times a day - trust the copy time, not the freshness." },
+        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified: the API itself can lag minutes, and our bot copies it only a few times a day - trust the copy time, not the freshness." + (lw ? " Last week's pool paid " + kUsd(lw.paidUsd) + " at reset (bot snapshot)." : "") },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
-      ];
-      if (lw) poolCards.push({ lbl: "LAST WEEK POOL AT RESET", val: kUsd(lw.paidUsd), sub: "week #" + lw.week + " snapshot", ic: "art/icons/amber.png", why: "Snapshot of the previous week pool at reset, stored by our bot when the week flipped." });
-      poolCards.push(
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · off-chain", ic: "art/icons/throne.png", why: "ETH jackpots paid, per playmog API (off-chain), all-time total. Cross-check: our on-chain claim-vault scan sees ~930 ETH of bounty+jackpot payouts over the game's history - within 1% of this API's all-time total." },
-      );
+        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · paid on-chain (claim vault)", ic: "art/icons/throne.png", why: "ETH jackpots paid all-time: the number is the playmog API's, but the payouts themselves settle on-chain through the claim vault (we count them in every receipt). Cross-check: our on-chain claim-vault scan sees ~930 ETH of bounty+jackpot payouts over the game's history - within 1% of this API's all-time total." },
+      ];
+      // the chain's own count of season keys — the missing half of the SERVER-SEEN card: same money, two ledgers
+      if (HALL && HALL.totalsE && HALL.totalsE.keysN > 0) poolCards.push({
+        lbl: "CHAIN-SEEN KEYS · SEASON",
+        val: HALL.totalsE.keysN.toLocaleString("en-US"),
+        sub: "settled on abstract since 17.09 · bot-updated",
+        ic: "art/icons/worldkey.png",
+        why: "Key purchases the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. Set it against the server-seen card: where the two disagree is exactly the Robinhood-relay and in-game VALOR buys no chain reader can see.",
+      });
       if (PH) poolCards.push(phCard());
       if (PH && PH.players) poolCards.push({
         lbl: "SEASON PLAYERS",
@@ -1216,16 +1311,14 @@ async function loadData() {
       + `<div class="pool-age"${pStale ? ' style="color:#c96a5e"' : ""}>${pStale}these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
       wkCd();
     }
-    if (hall && (hall.topsE || hall.tops)) {
-      HALL = hall;
-      renderHall();
-    }
+    renderRace(); // from the bot copy; tryPosthogLive() refreshes these cards in place
+    if (HALL) renderHall();
     buildMq();
     tryPosthogLive();
   } catch {}
 }
 loadData();
-setInterval(loadData, 10 * 60 * 1000);
+setInterval(() => loadData({ light: true }), 10 * 60 * 1000);
 
 const wkCd = () => {
   const el = $("wkReset");
@@ -1257,8 +1350,8 @@ setInterval(wkCd, 30000);
   let html = "";
   for (let i = 0; i < N; i++) {
     const src = items[i % items.length];
-    const edge = rnd() < 0.6;
-    const left = edge ? (rnd() < 0.5 ? 1 + 15 * rnd() : 83 + 15 * rnd()) : 22 + 56 * rnd();
+    // margins only: center-column sprites landed on top of the header text (measured 23.09)
+    const left = rnd() < 0.5 ? 1 + 15 * rnd() : 84 + 15 * rnd();
     const top = ((i + 0.1 + 0.8 * rnd()) / N) * 100;
     const w = Math.round(22 + rnd() * 46);
     const op = (0.10 + rnd() * 0.10).toFixed(3);
