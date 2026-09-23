@@ -85,22 +85,28 @@ const state = readJson("state.json", { lastBlock: DEPLOY - 1 });
 const startBlock = Math.max(state.lastBlock || 0, hall.lastBlock || 0, DEPLOY - 1);
 const head = parseInt(await rpc("eth_blockNumber", []), 16);
 
-// resumable one-time backfill (capped chunks/run so the GH 20-min timeout can never loop it):
-// phase "kp"     — legacy-shop key buys GAME_START→DEPLOY (true lifetime fed, $1 face)
-// phase "claims" — claim-vault ETH payouts GAME_START→lastBlock (bounties + jackpots)
-if (state.bf2 !== "done") {
-  const bf = state.bf2 && typeof state.bf2 === "object" ? state.bf2 : { phase: "kp", from: GAME_START };
+// resumable one-time backfills (capped chunks/run so the GH 20-min timeout can never loop it):
+// bf2 phases: "kp" (legacy-shop key buys GAME_START→DEPLOY), "claims" (claim-vault ETH payouts)
+// bf3 phase:  "kpqty" — KeysPurchased qty sum for the SEASON (real key count, not buy-tx count)
+if (state.bf2 !== "done" || state.bf3 !== "done") {
   const CAP = 120; // 100k-block chunks per run
   let done = 0;
   const addWallet = a => hall.wallets[a] || (hall.wallets[a] = { fed: 0, keys: 0, cashed: 0, hits: 0, big: 0, last: 0, fedE: 0, keysE: 0, cashedE: 0, hitsE: 0, bigE: 0, wkFed: 0, wkKeys: 0, wkHits: 0, wkCashed: 0, eth: 0, ethE: 0 });
+  // fresh repo: full bf2 chain; established repo (bf2 done): only the kpqty pass is missing
+  let bf = state.bf2 && typeof state.bf2 === "object" ? { ...state.bf2 }
+    : state.bf2 === "done" ? { phase: "kpqty", from: EVENT_BLOCK }
+    : { phase: "kp", from: GAME_START };
   while (done < CAP) {
     const target = bf.phase === "kp" ? DEPLOY - 1 : Math.min(state.lastBlock || head, head);
     if (bf.from > target) {
       if (bf.phase === "kp") { bf.phase = "claims"; bf.from = GAME_START; continue; }
-      state.bf2 = "done"; break;
+      if (bf.phase === "claims") { state.bf2 = "done"; bf = { phase: "kpqty", from: EVENT_BLOCK }; hall.totalsE.keysQty = 0; continue; }
+      state.bf3 = "done"; break;
     }
     const to = Math.min(bf.from + CHUNK - 1, target);
-    const logs = await getLogs(bf.from, to, [bf.phase === "kp" ? KEY_SHOPS[1] : CLAIM]);
+    // kp: legacy ETH shop; kpqty: current shop (season keys live there since block 77.9M); claims: claim vault
+    const scanAddr = [bf.phase === "kp" ? KEY_SHOPS[1] : bf.phase === "kpqty" ? KEY_SHOPS[0] : CLAIM];
+    const logs = await getLogs(bf.from, to, scanAddr);
     for (const l of logs) {
       if (!l.topics[1]) continue;
       const a = who(l);
@@ -111,6 +117,9 @@ if (state.bf2 !== "done") {
         const usd = kpUsd(l);
         w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++;
         w.keys += usd; hall.totals.keys += usd; hall.totals.keysN++;
+      } else if (bf.phase === "kpqty" && l.topics[0] === KP) {
+        const qty = parseInt(l.data.slice(2, 66) || "0", 16); // word0 = key quantity
+        hall.totalsE.keysQty = (hall.totalsE.keysQty || 0) + qty;
       } else if (bf.phase === "claims" && (l.topics[0] === SIG.CLAIM_B || l.topics[0] === SIG.CLAIM_J)) {
         const eth = parseInt(l.data.slice(2, 66) || "0", 16) / 1e18;
         w.eth += eth; hall.totals.eth += eth; hall.totals.ethN++;
@@ -120,8 +129,10 @@ if (state.bf2 !== "done") {
     bf.from = to + 1;
     done++;
   }
-  if (state.bf2 !== "done") state.bf2 = bf;
-  console.log("backfill:", state.bf2 === "done" ? "done" : JSON.stringify(state.bf2));
+  // persist whichever machine is still mid-flight (bf2 chain or the kpqty pass)
+  if (bf.phase === "kpqty") { if (state.bf3 !== "done") state.bf3 = bf; }
+  else if (state.bf2 !== "done") state.bf2 = bf;
+  console.log("backfill:", JSON.stringify({ bf2: state.bf2, bf3: state.bf3, keysQty: hall.totalsE.keysQty || 0 }));
 }
 
 // pools first: week number drives per-wallet weekly accumulators
@@ -181,7 +192,13 @@ for (let from = Math.max(startBlock + 1, DEPLOY); from <= head; from += CHUNK) {
     }
     else if (t === SIG.DEP || t === KP) {
       w.fed += usd; hall.totals.fed += usd; hall.totals.fedN++;
-      if (t === KP) { w.keys += usd; hall.totals.keys += usd; hall.totals.keysN++; }
+      if (t === KP) {
+        w.keys += usd; hall.totals.keys += usd; hall.totals.keysN++;
+        const qty = parseInt(l.data.slice(2, 66) || "0", 16); // word0 = key quantity
+        w.keysQty = (w.keysQty || 0) + qty;
+        if (inE) hall.totalsE.keysQty = (hall.totalsE.keysQty || 0) + qty;
+        if (inW) hall.totalsWk.keysQty = (hall.totalsWk.keysQty || 0) + qty;
+      }
       if (inW) { w.wkFed += usd; hall.totalsWk.fed += usd; if (t === KP) { w.wkKeys += usd; hall.totalsWk.keys += usd; } }
       if (inE) { w.fedE += usd; hall.totalsE.fed += usd; hall.totalsE.fedN++; if (t === KP) { w.keysE += usd; hall.totalsE.keys += usd; hall.totalsE.keysN++; } }
     }

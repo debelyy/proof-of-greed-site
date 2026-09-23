@@ -63,11 +63,8 @@ h1{
 @keyframes floaty{0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)}}
 
 main{width:100%; max-width:860px; margin:0 auto; padding:26px 16px 40px; display:flex; flex-direction:column; gap:26px; align-items:center; position:relative; z-index:2}
-/* the product leads: wallet form + receipt print above the telemetry wall (flex order, no DOM surgery) */
-main > *{order:10}
-main > #checker{order:1}
-main > #stage{order:2}
-main > .howto{order:20}
+/* page order is the DOM order: live event wall first (tape → stats/pools → race → hall), then the wallet form —
+   this site lives with the event; the receipt is printed once and shared */
 /* ══ NES-style panel ══ */
 .panel{
   width:100%; background:var(--panel); position:relative;
@@ -264,7 +261,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
     <div class="live-head"><span class="dot"></span>ABSTRACT CHAIN · LAST ~24 HOURS · LIVE 45S<span class="age" id="liveAge">connecting…</span></div>
     <div class="stats" id="stats"></div>
     <div class="pool-age">counted live from the Abstract chain, last ~24 hours · keys bought inside the game server (VALOR, free claims, drops) never touch the chain and can't appear here — no tracker can see them</div>
-    <div class="live-head"><span class="dot gold"></span>POOLS &amp; BOUNTIES · game-server numbers, copied by our bot (time below)</div>
+    <div class="live-head"><span class="dot gold"></span>POOLS, BOUNTY &amp; THRONE · the game's own numbers, our bot reads them signed-in (time below)</div>
     <div class="stats" id="poolStats"></div>
   </section>
 
@@ -308,7 +305,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
       <img id="verdictSprite" src="art/enemies/jackalot.png" alt="">
       <div class="bubble" id="verdictLine"></div>
     </div>
-    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH, INCL. LEGACY ETH SHOP) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS<br>CASHED = VALOR→USDC ON-CHAIN + ETH BOUNTY/JACKPOT CLAIMS (CLAIM VAULT, AT SPOT ETH) · NET = CASHED + ETH − FED<br>KEYS BOUGHT INSIDE THE GAME SERVER OR VIA THE ROBINHOOD-CHAIN RELAY ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN</div>
+    <div class="receipt-legend">FED = KEY BUYS (USDC/ETH, INCL. LEGACY ETH SHOP) + VALOR TOP-UPS · HITS = BOUNTY/GEM/THRONE CREDITS<br>CASHED = VALOR→USDC ON-CHAIN + ETH CLAIMS (WEEKLY POOL + JACKPOTS, CLAIM VAULT, AT SPOT ETH) · NET = CASHED + ETH − FED<br>KEYS BOUGHT INSIDE THE GAME SERVER OR VIA THE ROBINHOOD-CHAIN RELAY ARE INVISIBLE TO EVERYONE · WE READ ONLY THE ABSTRACT CHAIN</div>
     <div class="actions" id="actionsRow" hidden>
       <button id="dl">DOWNLOAD PNG</button>
       <button id="cpng" class="btn-ghost">COPY IMAGE</button>
@@ -329,8 +326,8 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
         <p><b>Key buys</b> — KeysPurchased logs of both key shops, $1/key at the game's own price; ETH-era legacy shop (0.001 ETH/key) counted at $1 face, the ETH amount shown on the receipt.</p>
         <p><b>VALOR top-ups</b> — deposit logs of the valorVault (USDC in, 100 VALOR = $1 peg).</p>
         <p><b>Cash-outs</b> — withdrawal logs: USDC transferred to you in the same tx, after the game's 5% fee.</p>
-        <p><b>ETH bounties &amp; jackpots</b> — claim logs of the claim vault: real ETH sent to your wallet since the game's launch (03.02.2026). ~930 ETH paid to 11.5k wallets all-time; matches the game's API within 1%.</p>
-        <p><b>Hits</b> — win-credit logs of the vault (bounty/gem/throne USD credits).</p>
+        <p><b>ETH claims (weekly pool + jackpots)</b> — the claim vault's own on-chain events: <b>WeeklyClaimed</b> (your weekly pool share) and <b>JackpotClaimed</b> (bounty hits), real ETH to your wallet since the game's launch (03.02.2026). ~930 ETH paid to 11.5k wallets all-time; matches the game's API within 1%.</p>
+        <p><b>Hits</b> — win-credit logs of the vault (bounty/gem/throne USD credits). Roughly a quarter of the gem value the server pays; the rest is server-side VALOR until cashed out.</p>
       </div>
       <div class="howto-col">
         <h4>INVISIBLE TO EVERYONE</h4>
@@ -372,7 +369,7 @@ setTimeout(() => {
 const CFG = {
   RPC: "https://api.mainnet.abs.xyz",
   VAULT: "0x2DDF2129a55cF132E580cc5d69faD1dE3d213BbA",
-  CLAIM_VAULT: "0x40018Cbb1926dae72DCb315E89AAB7320A191D02", // pays ETH bounties+jackpots ON-CHAIN since game launch; verified 22.09: full-history claims ≈ playmog totalDistributedEth within 1%
+  CLAIM_VAULT: "0x40018Cbb1926dae72DCb315E89AAB7320A191D02", // pays ETH ON-CHAIN since game launch via two events (keccak-verified vs client ABI 23.09): WeeklyClaimed (0x1ddd787c, weekly pool share) + JackpotClaimed (0x05b8b3cb, bounty hits); full-history ≈ playmog totalDistributedEth within 1%
   KEY_SHOPS: ["0x3ef14148603202C0225eDFFcFdCcF3E68E5F5E03", "0xBDE2483b242C266a97E39826b2B5B3c06FC02916"], // USDC/ETH shop (77.9M→head) + legacy ETH shop (deployed 38,281,282, first buy 38,322,158 → 77.9M; pre-DEPLOY buys ARE counted — the shop and the claim vault both predate the valorVault; counted at $1/key face); full-chain sig scan 21.09: no third emitter
   GAME_START: 38280364, // first claim-vault event = on-chain game launch (03.02.2026); KP+claims scanned from here, VALOR top-ups/cash-outs from DEPLOY_BLOCK
   DEPLOY_BLOCK: 60015914,
@@ -381,8 +378,8 @@ const CFG = {
     KEYS: "0x404d1f54ee326d5c061a2c9116c429c3dd776456700e045b563d2f68bea27089", // KeysPurchased(buyer, qty, pricePerKey, totalPaid 1e6 incl 7% fee) — USDC or ETH via router (ETH txs carry eth value; word2 = $1/key nominal, real ETH cost ~1% higher); VALOR payments are game-server-side: no event, invisible to any chain reader
     WITHDRAW: "0x33b093f4084754fd5547839fa67cdec248c92cc9d7df48b7f519049b9c15744f", // (player, usdcRaw, ...) USDC sent in-tx
     WIN: "0xddb801b4a8a9df6a5c9beb0dfdde647b955a35f734f28af5c6532df875638471", // (player, usdRaw, usdRaw, unixTs) credit, no in-tx transfer
-    CLAIM_B: "0x1ddd787c0b3d99344f6639d640b2d991e29512c85c952d530fbbe953328fb9c7", // claim vault: (player, ethWei) bounty/gem payout — real ETH out
-    CLAIM_J: "0x05b8b3cb6d59baf0ddb206b0927090ec793e2eab7bf5cf0d61a1d8db7f3f3362", // claim vault: (player, ethWei) jackpot payout (≈ playmog jackpotsPaidEth)
+    CLAIM_W: "0x1ddd787c0b3d99344f6639d640b2d991e29512c85c952d530fbbe953328fb9c7", // WeeklyClaimed(claimer, week, amount) — weekly pool share paid in ETH (name keccak-verified vs client ABI)
+    CLAIM_J: "0x05b8b3cb6d59baf0ddb206b0927090ec793e2eab7bf5cf0d61a1d8db7f3f3362", // JackpotClaimed(claimer, nonce, amount) — bounty hits paid in ETH (game UI calls this channel "Bounty"; ≈ playmog jackpotsPaidEth)
   },
   MAX_LOGS: 10000,
   EVENT: { START_BLOCK: 84166603, START_TS: 1789660800000, END_TS: 1790611200000 }, // Deed Season: 17.09 16:00 → 28.09 16:00 UTC
@@ -502,7 +499,7 @@ async function fetchWallet(wallet, { force = false } = {}) {
     getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WITHDRAW, t] }, fromV, head),
     getLogsChunked({ address: CFG.VAULT, topics: [CFG.SIG.WIN, t] }, fromV, head),
     getLogsChunked({ address: CFG.KEY_SHOPS, topics: [CFG.SIG.KEYS, t] }, fromK, head),
-    getLogsChunked({ address: CFG.CLAIM_VAULT, topics: [[CFG.SIG.CLAIM_B, CFG.SIG.CLAIM_J], t] }, fromK, head),
+    getLogsChunked({ address: CFG.CLAIM_VAULT, topics: [[CFG.SIG.CLAIM_W, CFG.SIG.CLAIM_J], t] }, fromK, head),
   ]);
   const events = {
     head,
@@ -615,7 +612,7 @@ function drawReceipt(pl) {
   }
   L.push({ k: "gap", h: 4 });
   L.push({ k: "row", l: `  VALOR CASHED OUT x${pl.nWd}`, r: money(pl.withdrawals), big: true });
-  if (pl.nClaims) L.push({ k: "row", l: M ? `  ETH BOUNTIES x${pl.nClaims}` : `  ETH BOUNTIES/JACKPOTS x${pl.nClaims}`, r: pl.ethClaims.toFixed(3) + " ETH" + (pl.ethSpot ? " ≈ " + money(pl.ethClaimsUsd) : " · NO PRICE"), big: true });
+  if (pl.nClaims) L.push({ k: "row", l: M ? `  ETH CLAIMS x${pl.nClaims}` : `  ETH CLAIMS (WEEKLY+JACKPOT) x${pl.nClaims}`, r: pl.ethClaims.toFixed(3) + " ETH" + (pl.ethSpot ? " ≈ " + money(pl.ethClaimsUsd) : " · NO PRICE"), big: true });
   L.push({ k: "gap", h: 4 });
   L.push({ k: "center", t: M ? "MAZE CREDITED (NOT CASH YET)" : "WHAT THE MAZE CREDITED (NOT CASH YET)", f: `18px ${TERM}`, c: MUT, sp: 3 });
   if (noTop && noHit) L.push({ k: "center", t: "no top-ups · no hits in this window", f: `17px ${TERM}`, c: MUT, dy: 2 });
@@ -633,7 +630,9 @@ function drawReceipt(pl) {
     const s = pl.serverStats;
     L.push({ k: "gap", h: 4 });
     L.push({ k: "center", t: M ? `THE SERVER SAW · WK #${s.weekNumber}` : `WHAT THE GAME'S SERVER SAW · WEEK #${s.weekNumber}`, f: `18px ${TERM}`, c: MUT, sp: 3 });
-    L.push({ k: "row", l: M ? `  TREASURE (RANK #${s.rank}/${s.of})` : `  WEEKLY TREASURE · RANK #${s.rank} OF ${s.of}`, r: money(s.treasure / 100), big: true });
+    // treasure is the race score; its money is the pool share, not treasure/100
+    const shareUsd = SERVER && SERVER.poolValor && SERVER.totalTreasure ? (SERVER.poolValor / 100) * (s.treasure / SERVER.totalTreasure) : null;
+    L.push({ k: "row", l: M ? `  TREASURE (RANK #${s.rank}/${s.of})` : `  WEEKLY TREASURE · RANK #${s.rank} OF ${s.of}`, r: kM(s.treasure) + " pts" + (shareUsd != null ? " · ≈ " + money(shareUsd) + " pool share" : ""), big: true });
     L.push({ k: "row", l: `  RUNS x${s.runs}`, r: s.keys.toLocaleString("en-US") + " keys" });
   }
   L.push({ k: "gap", h: 4 });
@@ -972,7 +971,10 @@ function shareText() {
   const bigEth = p.bigClaim && p.bigClaim.usd > ((p.biggest && p.biggest.usd) || 0) + 0.005;
   const hit = bigEth ? ` · biggest payout ${p.bigClaim.eth.toFixed(2)} ETH ≈ ${money(p.bigClaim.usd)}` : (p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "");
   const eth = p.nClaims ? ` · ${p.ethClaims.toFixed(2)} ETH claimed` : "";
-  const srv = p.serverStats ? ` · wk #${p.serverStats.weekNumber}: $${Math.round(p.serverStats.treasure / 100).toLocaleString("en-US")} treasure, #${p.serverStats.rank} racer` : "";
+  const srv = p.serverStats ? (() => {
+    const share = SERVER && SERVER.poolValor && SERVER.totalTreasure ? (SERVER.poolValor / 100) * (p.serverStats.treasure / SERVER.totalTreasure) : null;
+    return ` · wk #${p.serverStats.weekNumber}: ${kM(p.serverStats.treasure)} treasure (#${p.serverStats.rank} racer` + (share != null ? `, ≈${money(share)} pool share` : "") + ")";
+  })() : "";
   return `${hook}${rank}${hit}${eth}${srv} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
 
@@ -1127,9 +1129,10 @@ function buildMq() {
     const t = HALL.totals || {}, n = Object.keys(HALL.wallets || {}).length;
     if (n) items.push(n.toLocaleString("en-US") + " WALLETS SEEN IN THE MAZE");
     items.push("LIFETIME: " + kUsd(t.fed || 0) + " FED · " + kUsd(t.cashed || 0) + " CASHED · " + kUsd(t.hits || 0) + " HITS");
-    if (t.eth > 0.01) items.push("ETH BOUNTIES " + Math.round(t.eth) + " ETH" + (HALL.ethSpot ? " ≈ " + kUsd(t.eth * HALL.ethSpot) : "") + " CLAIMED ON-CHAIN");
+    if (t.eth > 0.01) items.push("ETH CLAIMS " + Math.round(t.eth) + " ETH ON-CHAIN: WEEKLY POOL + JACKPOTS");
   }
-  if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · JACKPOTS " + Math.round(POOLS.jackpotsPaidEth || 0) + " ETH · CLAIM VAULT PAYS ON-CHAIN");
+  if (SERVER && SERVER.jackpot) items.push("WEEK #" + SERVER.weekNumber + " POOL " + kUsd(SERVER.poolValor / 100) + " · BOUNTY POOL " + SERVER.jackpot.balanceEth.toFixed(1) + " ETH · THRONE " + kUsd((SERVER.throne || {}).poolValor / 100));
+  else if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · BOUNTY " + (POOLS.bountyPoolEth || 0).toFixed(1) + " ETH");
   items.push(...MQ_LORE);
   const seq = items.map(s => "<span>" + s + "</span><i>◆</i>").join("");
   $("mq").innerHTML = seq + seq;
@@ -1148,10 +1151,15 @@ function renderHall() {
     col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png") +
     col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
     col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png") +
-    // 4th board: the weekly treasure race, straight from the game's server (bot signed in)
-    (SERVER && SERVER.top ? `<div class="hcol top-treasure"><h3><img src="art/icons/worldkey.png" alt="">TOP TREASURE · WK #${SERVER.weekNumber}</h3>` +
-      SERVER.top.slice(0, 10).map(r =>
-        `<div class="hrow"><span class="r">${r.rank}</span><span class="a" title="${r.address}">${r.username || short(r.address)}</span><span class="v">$${(r.treasure / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span></div>`).join("") + `</div>` : "");
+    // 4th board: the weekly treasure race — treasure is a SCORE, its money = share of the weekly pool
+    (SERVER && SERVER.top ? (() => {
+      const share = tr => SERVER.poolValor && SERVER.totalTreasure ? (SERVER.poolValor / 100) * (tr / SERVER.totalTreasure) : 0;
+      const top = SERVER.top[0];
+      return `<div class="hcol top-treasure"><h3><img src="art/icons/worldkey.png" alt="">TOP TREASURE · WK #${SERVER.weekNumber}</h3>` +
+        SERVER.top.slice(0, 10).map(r =>
+          `<div class="hrow"><span class="r">${r.rank}</span><span class="a" title="${r.address} · pool share ≈ $${Math.round(share(r.treasure)).toLocaleString("en-US")}">${r.username || short(r.address)}</span><span class="v">${kM(r.treasure)}p</span></div>`).join("") +
+        `<div class="hall-note">treasure = race points · payout = pool × pts/total${top ? " · #1 ≈ $" + Math.round(share(top.treasure)).toLocaleString("en-US") : ""}</div></div>`;
+    })() : "");
   const se = HALL.totalsE || {}, at = HALL.totals || {};
   const ageH = HALL.t ? (Date.now() - Date.parse(HALL.t)) / 3600000 : 99;
   const staleH = ageH > 5 ? "⚠ STALE " + (ageH >= 10 ? Math.round(ageH) : ageH.toFixed(1)) + "h — " : "";
@@ -1208,8 +1216,8 @@ function renderRace() {
 }
 const phCard = () => ({
   lbl: "SERVER-SEEN KEYS · SEASON",
-  val: kUsd(PH.keysTotal),
-  sub: "abstract " + PH.keysAbstract.toLocaleString("en-US") + " + robinhood " + PH.keysRobinhood.toLocaleString("en-US") + " (relay) · chain sees abstract only" + (PH.live ? " · live" : ""),
+  val: kM(PH.keysTotal) + " keys",
+  sub: "abstract " + kM(PH.keysAbstract) + " + robinhood " + kM(PH.keysRobinhood) + " (relay) · chain sees abstract only" + (PH.live ? " · live" : ""),
   ic: "art/icons/key.png",
   why: "The game's own event dashboard (PostHog) counted every arcade key bought this season: " + PH.keysAbstract.toLocaleString("en-US") + " settled on Abstract plus " + PH.keysRobinhood.toLocaleString("en-US") + " Robinhood-chain relay buys that leave no Abstract trace. Our chain cards see only the Abstract part - Robinhood and in-game VALOR buys are invisible to every chain reader. Same dashboard says the server paid $" + Math.round(PH.gemsPaidUsd).toLocaleString("en-US") + " in gem bounties this season; the vault's on-chain hit credits cover roughly a quarter of that. " + (PH.live ? "Fetched live in your browser from the game's public dashboard - the game's own ledgers can lag hours behind." : "Copied by our bot; copy time in the footer line below."),
 });
@@ -1314,10 +1322,10 @@ async function loadData({ light = false } = {}) {
       const wn = Number(pools.weekNumber);
       const S = SERVER; // the bot's SIWE-authenticated copy of what a logged-in player sees
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(S ? S.poolValor / 100 : pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + (S ? S.weekNumber : wn) + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "This week's payout pool, straight from the game's own API (our bot signs in with a fan account and copies it). The pool refills as keys are bought; it pays out at Thursday's reset." },
+        { lbl: "WEEKLY POOL", val: kUsd(S ? S.poolValor / 100 : pools.weeklyPoolUsd), sub: "70% of key money · VALOR 100 = $1 · wk #" + (S ? S.weekNumber : wn) + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "This week's payout pool, straight from the game's own API (our bot signs in with a fan account and copies it). 70% of every key feeds it; it splits by treasure share at Thursday's reset and is claimed on-chain in ETH (WeeklyClaimed)." },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
-        { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
-        { lbl: "JACKPOT POOL", val: (S ? S.jackpot.balanceEth : 0).toFixed(2) + " ETH", sub: "in the pool right now · " + Math.round(S ? S.jackpot.totalPaidEth : (pools.jackpotsPaidEth || 0)).toLocaleString("en-US") + " ETH paid all-time (claim vault)", ic: "art/icons/throne.png", why: "The jackpot pool's live ETH balance, read from the game's own API by our signed-in bot (paid jackpots settle on-chain through the claim vault - we count them in every receipt)." },
+        { lbl: "BOUNTY POOL", val: (S ? S.jackpot.balanceEth : (pools.bountyPoolEth || 0)).toFixed(2) + " ETH", sub: "18% of key money · instant payouts on hit" + (S && S.jackpot.totalPaidEth ? " · " + Math.round(S.jackpot.totalPaidEth).toLocaleString("en-US") + " ETH paid all-time" : ""), ic: "art/icons/jackpot.png", why: "The game's Bounty pool ('jackpot' in its API): 18% of key money, pays instantly when a run hits it, settles on-chain through the claim vault (JackpotClaimed - we count those ETH in every receipt). The VALOR face of the same pool: " + kUsd((S ? S.jackpot.poolValor : (pools.bountyPoolUsd || 0) * 100) / 100) + "." },
+        { lbl: "THRONE POOL", val: S && S.throne ? kUsd(S.throne.poolValor / 100) : "…", sub: "5% of key money · progressive, pays 80%", ic: "art/icons/throne.png", why: "The Throne: a progressive pool (5% of key money, doesn't reset weekly). A full run clear rolls for it - one winner takes 80%, the rest rolls over. Per the game's own API, read by our signed-in bot." },
       ];
       if (S && S.raffle) poolCards.push({
         lbl: "WEEKLY KEY RAFFLE",
@@ -1328,10 +1336,10 @@ async function loadData({ light = false } = {}) {
       });
       if (S && S.totalTreasure) poolCards.push({
         lbl: "TOTAL TREASURE · WK",
-        val: kUsd(S.totalTreasure / 100),
-        sub: "all racers this week · game server",
+        val: kM(S.totalTreasure) + " pts",
+        sub: "all racers this week · splits the " + kUsd(S.poolValor / 100) + " pool",
         ic: "art/icons/gem.png",
-        why: "Total treasure every racer earned this week combined, per the game's server. Treasure is the weekly race currency - it converts into a share of the weekly pool at reset.",
+        why: "Total treasure every racer earned this week, per the game's server. Treasure is the race SCORE, not money: your payout = pool x (your treasure / total treasure).",
       });
       if (S && S.totalPlayers) poolCards.push({
         lbl: "WEEKLY RACERS",
@@ -1341,20 +1349,21 @@ async function loadData({ light = false } = {}) {
         why: "Wallets the game's server saw running the weekly race this week - the week-by-week player count only the server knows.",
       });
       // the chain's own count of season keys — the missing half of the SERVER-SEEN card: same money, two ledgers
-      if (HALL && HALL.totalsE && HALL.totalsE.keysN > 0) poolCards.push({
+      // keysQty = actual keys (qty summed over KeysPurchased); keysN = buy transactions — don't mix them
+      if (HALL && HALL.totalsE && (HALL.totalsE.keysQty || HALL.totalsE.keysN) > 0) poolCards.push({
         lbl: "CHAIN-SEEN KEYS · SEASON",
-        val: HALL.totalsE.keysN.toLocaleString("en-US"),
+        val: (HALL.totalsE.keysQty ? kM(HALL.totalsE.keysQty) : HALL.totalsE.keysN.toLocaleString("en-US")) + (HALL.totalsE.keysQty ? "" : " buys"),
         sub: "settled on abstract since 17.09 · bot-updated",
         ic: "art/icons/worldkey.png",
-        why: "Key purchases the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. Set it against the server-seen card: where the two disagree is exactly the Robinhood-relay and in-game VALOR buys no chain reader can see.",
+        why: "Keys the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. Set it against the server-seen card: where the two disagree is exactly the Robinhood-relay and in-game VALOR buys no chain reader can see.",
       });
       if (PH) poolCards.push(phCard());
       if (PH && PH.gemsPaidUsd) poolCards.push({
         lbl: "GEMS PAID · SEASON",
         val: kUsd(PH.gemsPaidUsd),
-        sub: "server gem bounties · on-chain credits cover ~¼",
+        sub: "server gem bounties · chain sees ~¼",
         ic: "art/icons/gem.png",
-        why: "Gem bounties the game's server paid this season, per its own dashboard. About a quarter of that lands on-chain as vault hit credits (which every receipt counts); the rest is server-side VALOR until cashed out.",
+        why: "Gem bounties the game's server paid this season, per its own dashboard. About a quarter lands on-chain as vault hit credits (which every receipt counts); the rest is server-side VALOR until cashed out.",
       });
       if (PH && PH.players) poolCards.push({
         lbl: "SEASON PLAYERS",
@@ -1373,7 +1382,8 @@ async function loadData({ light = false } = {}) {
       const pAgeH = pools.t ? (Date.now() - Date.parse(pools.t)) / 3600000 : 99;
       const pStale = pAgeH > 5 ? `⚠ STALE ${pAgeH >= 10 ? Math.round(pAgeH) : pAgeH.toFixed(1)}h — ` : "";
       $("poolStats").innerHTML = poolCards.map(statCard).join("")
-      + `<div class="pool-age"${pStale ? ' style="color:#c96a5e"' : ""}>${pStale}these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`;
+      + `<div class="pool-age"${pStale ? ' style="color:#c96a5e"' : ""}>${pStale}these come from the game's own API, not the chain — they can lag · copy time ${(pools.t || "").slice(11, 16)} UTC${PH ? " · posthog " + (PH.t || "").slice(11, 16) + " UTC" : ""} · the chain cards above are live · players/corn/raffle → <a href="https://us.posthog.com/shared/i2BtIlfGANozI7OO_cm1rIA2JKbPGg" target="_blank" rel="noopener" style="color:var(--violet)">event dashboard</a></div>`
+      + `<div class="pool-age">game words · VALOR: in-game money, 100 = $1 · treasure: race points, pays as pool share (70% of keys) · bounty: instant hit prizes, 18% of keys · throne: progressive 80% on full clear, 5% of keys · corn: Deed Season currency → silo/raffle spots · EVE: cross-game mode (Onchain Heroes) · marbles: → Abstract XP</div>`;
       wkCd();
     }
     renderRace(); // from the bot copy; tryPosthogLive() refreshes these cards in place

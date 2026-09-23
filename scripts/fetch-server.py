@@ -65,10 +65,12 @@ def get(opener, path):
 
 
 def user_stats(opener, addr):
-    """userStats по ЛЮБОМУ адресу — то, чего нет на цепи (treasure/ранг/ключи недели)."""
+    """userStats по ЛЮБОМУ адресу + общий контекст для честной доли пула (treasure = очки)."""
     try:
         j = get(opener, "api/runs?mode=weekly&address=" + addr.lower())
+        wp = get(opener, "api/weekly-pool")
         return {"weekNumber": j.get("weekNumber"), "totalPlayers": j.get("total"),
+                "totalTreasure": j.get("totalGlobalTreasure"), "poolValor": int(wp.get("currentPoolValor") or 0),
                 "stats": j.get("userStats") or None}
     except Exception as e:
         print("userStats " + addr[:10] + " failed: " + str(e)[:60], file=sys.stderr)
@@ -84,6 +86,7 @@ def main():
     jackpot = get(opener, "api/jackpot/pool")
     weekly_pool = get(opener, "api/weekly-pool")
     claims = get(opener, "api/claims")
+    throne = get(opener, "api/throne/campaign")
 
     lb = week.get("leaderboard") or []
     out = {
@@ -100,6 +103,11 @@ def main():
             "balanceEth": int(jackpot.get("balanceWei") or 0) / 1e18,
             "totalPaidEth": int(jackpot.get("totalPaidWei") or 0) / 1e18,
             "poolValor": int(jackpot.get("poolValor") or 0),
+        },
+        "throne": {
+            "poolValor": int(throne.get("thronePoolValor") or 0),
+            "boostEnabled": bool(throne.get("boostEnabled")),
+            "boostAmountValor": int(throne.get("boostAmountValor") or 0),
         },
         "claims": {
             "weekNumber": (claims.get("currentWeek") or {}).get("weekNumber"),
