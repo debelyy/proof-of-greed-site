@@ -1355,7 +1355,7 @@ async function loadData({ light = false } = {}) {
         val: (HALL.totalsE.keysQty ? kM(HALL.totalsE.keysQty) : HALL.totalsE.keysN.toLocaleString("en-US")) + (HALL.totalsE.keysQty ? "" : " buys"),
         sub: "settled on abstract since 17.09 · bot-updated",
         ic: "art/icons/worldkey.png",
-        why: "Keys the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. Set it against the server-seen card: where the two disagree is exactly the Robinhood-relay and in-game VALOR buys no chain reader can see.",
+        why: "Keys the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. It matches the server's own 'abstract' bucket within the dashboard's lag; what no chain reader can ever see is the Robinhood relay and in-game VALOR buys - the rest of the server's total.",
       });
       if (PH) poolCards.push(phCard());
       if (PH && PH.gemsPaidUsd) poolCards.push({
