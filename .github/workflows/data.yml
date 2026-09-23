@@ -25,6 +25,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: server ledger (SIWE fan account)
+        run: |
+          pip install --quiet eth-account
+          python scripts/fetch-server.py   # POG_SIWE_KEY from repo secrets; skips silently if unset
+        env:
+          POG_SIWE_KEY: ${{ secrets.POG_SIWE_KEY }}
       - name: scan chain + playmog pools
         run: node scripts/build-data.mjs
       - name: commit data

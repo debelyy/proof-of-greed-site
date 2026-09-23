@@ -197,14 +197,14 @@ canvas{width:100%; height:auto; display:block}
 .fitem .ago{color:var(--muted); font-size:15px; min-width:64px; text-align:right}
 @keyframes slidein{from{opacity:0; transform:translateX(-16px)} to{opacity:1; transform:none}}
 /* ══ hall of greed ══ */
-.hall{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px}
+.hall{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
 .hcol{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
 .hcol h3{font-family:var(--px); font-size:10px; color:var(--violet); margin-bottom:10px; letter-spacing:.08em}
 .hrow{display:flex; gap:8px; font-size:17px; padding:3px 0; color:var(--muted)}
 .hrow .r{width:22px; color:#5c5478}
 .hrow .a{color:var(--text)}
 .hrow .v{margin-left:auto; font-family:var(--px); font-size:10px}
-.hcol.top-net .v{color:var(--green)} .hcol.top-hits .v{color:var(--gold)} .hcol.top-fed .v{color:var(--violet)}
+.hcol.top-net .v{color:var(--green)} .hcol.top-hits .v{color:var(--gold)} .hcol.top-fed .v{color:var(--violet)} .hcol.top-treasure .v{color:var(--pink)}
 footer{
   width:100%; max-width:860px; margin:0 auto; padding:0 16px 46px; color:var(--muted); font-size:17px; text-align:left; line-height:1.55; position:relative; z-index:2;
 }
@@ -223,6 +223,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
   .fitem{font-size:16px}
   .fitem .ago{min-width:44px}
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hall{grid-template-columns:1fr}
   .stat{min-height:0}
   /* the tape legend gets its own line instead of squeezing the title into a column */
   .live-head .age{flex-basis:100%; margin-left:0}
@@ -628,6 +629,13 @@ function drawReceipt(pl) {
     L.push({ k: "row", l: M ? `  RANK (${pl.fieldN} WALLETS)` : `  RANK IN WINDOW (${pl.fieldN} WALLETS)`, r: `#${pl.rankHits} hits · #${pl.rankNet} net${M ? "" : bot}` });
   }
   if (pl.wins > 0.005) L.push({ k: "row", l: M ? "  PAPER NET (HITS AT FACE)" : "  PAPER NET (CASHED+ETH+CREDITS AT FACE)", r: money(pl.paperNet, true) });
+  if (pl.serverStats) {
+    const s = pl.serverStats;
+    L.push({ k: "gap", h: 4 });
+    L.push({ k: "center", t: M ? `THE SERVER SAW · WK #${s.weekNumber}` : `WHAT THE GAME'S SERVER SAW · WEEK #${s.weekNumber}`, f: `18px ${TERM}`, c: MUT, sp: 3 });
+    L.push({ k: "row", l: M ? `  TREASURE (RANK #${s.rank}/${s.of})` : `  WEEKLY TREASURE · RANK #${s.rank} OF ${s.of}`, r: money(s.treasure / 100), big: true });
+    L.push({ k: "row", l: `  RUNS x${s.runs}`, r: s.keys.toLocaleString("en-US") + " keys" });
+  }
   L.push({ k: "gap", h: 4 });
   L.push({ k: "rule", zig: true });
   L.push({ k: "net", v: pl.net });
@@ -843,6 +851,7 @@ let HALL = null;
 let POOLS = null;
 let PHIST = null;
 let PH = null;
+let SERVER = null; // the bot's signed-in copy of the game's own API (weekly race, live pools)
 window.__POG = { lastPL: null, SPR };
 
 // last block of Deed Season (binary search, cached) — only needed after 28.09
@@ -918,6 +927,11 @@ async function run(wallet, force = false) {
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE + (w.ethE || 0) * sp : w.cashed - w.fed + (w.eth || 0) * sp)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals - (pl.ethClaimsUsd || 0));
     }
+    // the game's own server ledger (bot's signed-in weekly copy): treasure/rank/keys the chain never sees
+    if (SERVER && SERVER.top) {
+      const s = SERVER.top.find(r => r.address.toLowerCase() === wallet.toLowerCase());
+      if (s) pl.serverStats = { weekNumber: SERVER.weekNumber, rank: s.rank, treasure: s.treasure, keys: s.totalKeysSpent, runs: s.runCount, of: SERVER.totalPlayers };
+    }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp; window.__POG.printed = true;
     $("verifyLink").href = "https://explorer.mainnet.abs.xyz/address/" + pl.wallet;
     $("verifyRow").hidden = false;
@@ -958,7 +972,8 @@ function shareText() {
   const bigEth = p.bigClaim && p.bigClaim.usd > ((p.biggest && p.biggest.usd) || 0) + 0.005;
   const hit = bigEth ? ` · biggest payout ${p.bigClaim.eth.toFixed(2)} ETH ≈ ${money(p.bigClaim.usd)}` : (p.biggest ? ` · biggest hit ${money(p.biggest.usd)}` : "");
   const eth = p.nClaims ? ` · ${p.ethClaims.toFixed(2)} ETH claimed` : "";
-  return `${hook}${rank}${hit}${eth} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
+  const srv = p.serverStats ? ` · wk #${p.serverStats.weekNumber}: $${Math.round(p.serverStats.treasure / 100).toLocaleString("en-US")} treasure, #${p.serverStats.rank} racer` : "";
+  return `${hook}${rank}${hit}${eth}${srv} - fed ${money(p.fed)} (${p.keyQty} keys), cashed ${money(p.withdrawals)} - receipt: ${url} #ProofOfGreed #DeedSeason`;
 }
 
 $("go").addEventListener("click", () => run($("addr").value));
@@ -1132,7 +1147,11 @@ function renderHall() {
   $("hall").innerHTML =
     col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png") +
     col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
-    col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png");
+    col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png") +
+    // 4th board: the weekly treasure race, straight from the game's server (bot signed in)
+    (SERVER && SERVER.top ? `<div class="hcol top-treasure"><h3><img src="art/icons/worldkey.png" alt="">TOP TREASURE · WK #${SERVER.weekNumber}</h3>` +
+      SERVER.top.slice(0, 10).map(r =>
+        `<div class="hrow"><span class="r">${r.rank}</span><span class="a" title="${r.address}">${r.username || short(r.address)}</span><span class="v">$${(r.treasure / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}</span></div>`).join("") + `</div>` : "");
   const se = HALL.totalsE || {}, at = HALL.totals || {};
   const ageH = HALL.t ? (Date.now() - Date.parse(HALL.t)) / 3600000 : 99;
   const staleH = ageH > 5 ? "⚠ STALE " + (ageH >= 10 ? Math.round(ageH) : ageH.toFixed(1)) + "h — " : "";
@@ -1140,9 +1159,13 @@ function renderHall() {
   $("hallAge").textContent = staleH + (isE
     ? `deed season: fed ${kUsd(se.fed || 0)} · cashed ${kUsd(se.cashed || 0)} · hits ${kUsd(se.hits || 0)}${ethLine(se.eth)}`
     : `all-time: fed ${kUsd(at.fed || 0)} · cashed ${kUsd(at.cashed || 0)} · hits ${kUsd(at.hits || 0)}${ethLine(at.eth)}`)
-    + ` · bot-updated ${(HALL.t || "").slice(11, 16)} UTC`;
+    + ` · bot-updated ${(HALL.t || "").slice(11, 16)} UTC` + (SERVER ? ` · server ${(SERVER.t || "").slice(11, 16)} UTC` : "");
   $("hallAge").style.color = staleH ? "#c96a5e" : "";
   $("hallBox").hidden = false;
+}
+function renderServerBoards() {
+  if (!SERVER || !SERVER.top) return;
+  renderHall(); // re-render with the treasure board attached (scope switch also rebuilds it)
 }
 const statCard = c => `<div class="stat"><img class="stat-ic" src="${c.ic}" alt=""><div class="lbl">${c.lbl}</div><div class="val"${c.vid ? ` id="${c.vid}"` : ""}>${c.why ? `<span class="why" data-why="${c.why}">${c.val}</span>` : c.val}</div><div class="sub">${c.sub}</div></div>`;
 /* corn race + raffles: the game's server is the ONLY ledger for these (corn never touches the chain);
@@ -1263,25 +1286,60 @@ async function loadData({ light = false } = {}) {
     // light refresh (10-min interval) skips hall.json: ~1MB gzipped, the bot rewrites it only a few times a day
     // every fetch carries a timeout: one stalled file must never freeze the whole data layer (pools/hall/posthog)
     const jf = f => fetch(f + nb, { cache: "no-store", signal: AbortSignal.timeout(8000) }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    const [pools, hall, hist, ph] = await Promise.all([
+    const [pools, hall, hist, ph, srv] = await Promise.all([
       jf("data/pools.json"),
       light ? null : jf("data/hall.json"),
       jf("data/pools_hist.json"),
       jf("data/posthog.json"),
+      jf("data/server.json"),
     ]);
     if (pools) POOLS = pools;
     if (hist) PHIST = hist;
     if (ph && ph.keysTotal != null) PH = ph;
+    if (srv && srv.top) SERVER = srv;
+    // a deep-link receipt prints before the data layer lands — attach server stats once it does
+    if (SERVER && lastPL && !lastPL.serverStats) {
+      const s = SERVER.top.find(r => r.address.toLowerCase() === lastPL.wallet.toLowerCase());
+      if (s) {
+        lastPL.serverStats = { weekNumber: SERVER.weekNumber, rank: s.rank, treasure: s.treasure, keys: s.totalKeysSpent, runs: s.runCount, of: SERVER.totalPlayers };
+        if (window.__POG && window.__POG.printed) drawReceipt(lastPL);
+      }
+    }
+    if (pools) POOLS = Object.assign({}, pools, SERVER && SERVER.weekEnd ? { weekEnd: SERVER.weekEnd } : {});
     if (hall && (hall.topsE || hall.tops)) HALL = hall; // before the pools grid: the chain-vs-server card reads it
+    renderRace(); // from the bot copy; tryPosthogLive() refreshes these cards in place
+    renderServerBoards();
     if (pools) {
       const lw = PHIST && PHIST.lastWeek;
       const wn = Number(pools.weekNumber);
+      const S = SERVER; // the bot's SIWE-authenticated copy of what a logged-in player sees
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + wn + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "Game-server VALOR pool copied from the playmog API at the copy time below. Not chain-verified: the API itself can lag minutes, and our bot copies it only a few times a day - trust the copy time, not the freshness." + (lw ? " Last week's pool paid " + kUsd(lw.paidUsd) + " at reset (bot snapshot)." : "") },
+        { lbl: "WEEKLY POOL", val: kUsd(S ? S.poolValor / 100 : pools.weeklyPoolUsd), sub: "server-side VALOR · 100 = $1 · wk #" + (S ? S.weekNumber : wn) + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "This week's payout pool, straight from the game's own API (our bot signs in with a fan account and copies it). The pool refills as keys are bought; it pays out at Thursday's reset." },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
         { lbl: "BOUNTY POOL", val: kUsd(pools.bountyPoolUsd), sub: "server-side VALOR ledger · playmog API", ic: "art/icons/jackpot.png", why: "Game-server VALOR ledger from the playmog API; its USD valuation drifts off-chain. Copy time below." },
-        { lbl: "JACKPOTS PAID", val: Math.round(pools.jackpotsPaidEth || 0).toLocaleString("en-US") + " ETH", sub: "of " + Math.round(pools.totalDistributedEth || 0).toLocaleString("en-US") + " ETH all-time · paid on-chain (claim vault)", ic: "art/icons/throne.png", why: "ETH jackpots paid all-time: the number is the playmog API's, but the payouts themselves settle on-chain through the claim vault (we count them in every receipt). Cross-check: our on-chain claim-vault scan sees ~930 ETH of bounty+jackpot payouts over the game's history - within 1% of this API's all-time total." },
+        { lbl: "JACKPOT POOL", val: (S ? S.jackpot.balanceEth : 0).toFixed(2) + " ETH", sub: "in the pool right now · " + Math.round(S ? S.jackpot.totalPaidEth : (pools.jackpotsPaidEth || 0)).toLocaleString("en-US") + " ETH paid all-time (claim vault)", ic: "art/icons/throne.png", why: "The jackpot pool's live ETH balance, read from the game's own API by our signed-in bot (paid jackpots settle on-chain through the claim vault - we count them in every receipt)." },
       ];
+      if (S && S.raffle) poolCards.push({
+        lbl: "WEEKLY KEY RAFFLE",
+        val: S.raffle.globalEntries.toLocaleString("en-US"),
+        sub: S.raffle.totalEntrants.toLocaleString("en-US") + " entrants · draws Thu 16:30 UTC",
+        ic: "art/icons/marble.png",
+        why: "Entries in this week's key raffle, per the game's own server. Every entry is one ticket; the draw happens half an hour after the week resets. Our bot reads it signed-in, like any player.",
+      });
+      if (S && S.totalTreasure) poolCards.push({
+        lbl: "TOTAL TREASURE · WK",
+        val: kUsd(S.totalTreasure / 100),
+        sub: "all racers this week · game server",
+        ic: "art/icons/gem.png",
+        why: "Total treasure every racer earned this week combined, per the game's server. Treasure is the weekly race currency - it converts into a share of the weekly pool at reset.",
+      });
+      if (S && S.totalPlayers) poolCards.push({
+        lbl: "WEEKLY RACERS",
+        val: S.totalPlayers.toLocaleString("en-US"),
+        sub: "played this week · vs " + (PH && PH.players ? PH.players.toLocaleString("en-US") + " season" : "season dashboard"),
+        ic: "art/icons/key.png",
+        why: "Wallets the game's server saw running the weekly race this week - the week-by-week player count only the server knows.",
+      });
       // the chain's own count of season keys — the missing half of the SERVER-SEEN card: same money, two ledgers
       if (HALL && HALL.totalsE && HALL.totalsE.keysN > 0) poolCards.push({
         lbl: "CHAIN-SEEN KEYS · SEASON",
@@ -1291,6 +1349,13 @@ async function loadData({ light = false } = {}) {
         why: "Key purchases the chain itself settled since the season start (17.09) - our bot's on-chain scan, not the game's dashboard. Set it against the server-seen card: where the two disagree is exactly the Robinhood-relay and in-game VALOR buys no chain reader can see.",
       });
       if (PH) poolCards.push(phCard());
+      if (PH && PH.gemsPaidUsd) poolCards.push({
+        lbl: "GEMS PAID · SEASON",
+        val: kUsd(PH.gemsPaidUsd),
+        sub: "server gem bounties · on-chain credits cover ~¼",
+        ic: "art/icons/gem.png",
+        why: "Gem bounties the game's server paid this season, per its own dashboard. About a quarter of that lands on-chain as vault hit credits (which every receipt counts); the rest is server-side VALOR until cashed out.",
+      });
       if (PH && PH.players) poolCards.push({
         lbl: "SEASON PLAYERS",
         val: PH.players.toLocaleString("en-US"),
