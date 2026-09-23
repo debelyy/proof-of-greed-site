@@ -82,6 +82,22 @@ def main():
     if not opener:
         return 1
     week = get(opener, "api/runs?mode=weekly")
+    # full weekly board: the API pages by 100 (page=N, verified 23.09; empty page = end) —
+    # sweeping all pages (~41 requests) lets EVERY web receipt show its racer stats, not just the top-100
+    rows = list(week.get("leaderboard") or [])
+    page = 2
+    while page <= 200:  # hard safety cap
+        try:
+            j = get(opener, "api/runs?mode=weekly&page=" + str(page))
+        except Exception as e:
+            print("board page " + str(page) + " failed: " + str(e)[:60], file=sys.stderr)
+            break
+        lb = j.get("leaderboard") or []
+        if not lb:
+            break
+        rows.extend(lb)
+        page += 1
+    print("weekly board swept: " + str(len(rows)) + " racers of " + str(week.get("total")) + " in " + str(page - 1) + " pages")
     raffle = get(opener, "api/raffle/status")
     jackpot = get(opener, "api/jackpot/pool")
     weekly_pool = get(opener, "api/weekly-pool")
@@ -89,6 +105,8 @@ def main():
     throne = get(opener, "api/throne/campaign")
 
     lb = week.get("leaderboard") or []
+    # racers map for receipts: [rank, treasure, runCount, totalKeysSpent] per address — every weekly racer, not just top-100
+    racers = {r["address"].lower(): [r["rank"], r["treasure"], r.get("runCount") or 0, r.get("totalKeysSpent") or 0] for r in rows}
     out = {
         "t": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         "weekNumber": week.get("weekNumber"),
@@ -117,12 +135,13 @@ def main():
         },
         "top": [{"rank": r["rank"], "address": r["address"], "username": r.get("username"),
                  "treasure": r["treasure"], "runCount": r.get("runCount"), "totalKeysSpent": r.get("totalKeysSpent")}
-                for r in lb[:100]],
+                for r in rows[:100]],
+        "racers": racers,
     }
     with open(os.path.join(DATA, "server.json"), "w") as f:
         json.dump(out, f, separators=(",", ":"))
     print("server.json: wk#" + str(out["weekNumber"]) + " · top " + str(len(out["top"])) + " of " + str(out["totalPlayers"])
-          + " · pool " + str(out["poolValor"]) + " VALOR · jackpot " + str(round(out["jackpot"]["balanceEth"], 2)) + " ETH"
+          + " · racers map " + str(len(racers)) + " · pool " + str(out["poolValor"]) + " VALOR · jackpot " + str(round(out["jackpot"]["balanceEth"], 2)) + " ETH"
           + " · raffle " + str(out["raffle"]["globalEntries"]) + " entries/" + str(out["raffle"]["totalEntrants"]) + " entrants")
     return 0
 

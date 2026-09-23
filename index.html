@@ -926,9 +926,16 @@ async function run(wallet, force = false) {
       pl.rankNet = act.filter(w => ((isE ? w.cashedE - w.fedE + (w.ethE || 0) * sp : w.cashed - w.fed + (w.eth || 0) * sp)) > pl.net).length + 1;
       pl.riding = Math.max(0, pl.fed + pl.wins - pl.withdrawals - (pl.ethClaimsUsd || 0));
     }
+const serverRowOf = wallet => {
+  if (!SERVER) return null;
+  const a = SERVER.racers && SERVER.racers[String(wallet).toLowerCase()];
+  if (a) return { rank: a[0], treasure: a[1], runCount: a[2], totalKeysSpent: a[3] };
+  const s = SERVER.top && SERVER.top.find(r => r.address.toLowerCase() === String(wallet).toLowerCase());
+  return s ? { rank: s.rank, treasure: s.treasure, runCount: s.runCount, totalKeysSpent: s.totalKeysSpent } : null;
+};
     // the game's own server ledger (bot's signed-in weekly copy): treasure/rank/keys the chain never sees
-    if (SERVER && SERVER.top) {
-      const s = SERVER.top.find(r => r.address.toLowerCase() === wallet.toLowerCase());
+    {
+      const s = serverRowOf(wallet); // full racers map (all weekly players), not just the top-100
       if (s) pl.serverStats = { weekNumber: SERVER.weekNumber, rank: s.rank, treasure: s.treasure, keys: s.totalKeysSpent, runs: s.runCount, of: SERVER.totalPlayers };
     }
     lastPL = pl; window.__POG.lastPL = pl; window.__POG.lastVerdict = verdictOf(pl).stamp; window.__POG.printed = true;
@@ -1307,7 +1314,7 @@ async function loadData({ light = false } = {}) {
     if (srv && srv.top) SERVER = srv;
     // a deep-link receipt prints before the data layer lands — attach server stats once it does
     if (SERVER && lastPL && !lastPL.serverStats) {
-      const s = SERVER.top.find(r => r.address.toLowerCase() === lastPL.wallet.toLowerCase());
+      const s = serverRowOf(lastPL.wallet);
       if (s) {
         lastPL.serverStats = { weekNumber: SERVER.weekNumber, rank: s.rank, treasure: s.treasure, keys: s.totalKeysSpent, runs: s.runCount, of: SERVER.totalPlayers };
         if (window.__POG && window.__POG.printed) drawReceipt(lastPL);
