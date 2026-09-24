@@ -197,7 +197,7 @@ canvas{width:100%; height:auto; display:block}
 .hall{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
 .hcol{background:#0a0813; border:2px solid var(--line); padding:12px 14px}
 .hcol h3{font-family:var(--px); font-size:10px; color:var(--violet); margin-bottom:10px; letter-spacing:.08em}
-.hrow{display:flex; gap:8px; font-size:17px; padding:3px 0; color:var(--muted)}
+.hrow{display:flex; align-items:baseline; gap:8px; font-size:17px; padding:3px 0; color:var(--muted)}
 .hrow .r{width:22px; color:#5c5478}
 .hrow .a{color:var(--text)}
 .hrow .v{margin-left:auto; font-family:var(--px); font-size:10px}
@@ -1151,21 +1151,22 @@ function renderHall() {
   const T = isE ? (HALL.topsE || HALL.tops) : (HALL.tops || HALL.topsE);
   // game usernames resolved by the bot from playmog's public profile API; hover shows the raw address
   const nameOf = a => (HALL.nicks && HALL.nicks[a]) || short(a);
-  const col = (cls, title, rows, fmt, ic) =>
+  const col = (cls, title, rows, fmt, ic, note) =>
     `<div class="hcol ${cls}"><h3><img src="${ic}" alt="">${title}</h3>` + rows.map((r, i) =>
-      `<div class="hrow"><span class="r">${i + 1}</span><span class="a" title="${r.a}">${nameOf(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("") + `</div>`;
+      `<div class="hrow"><span class="r">${i + 1}</span><span class="a" title="${r.a}">${nameOf(r.a)}</span><span class="v">${fmt(r)}</span></div>`).join("")
+      + (note ? `<div class="hall-note">${note}</div>` : "") + `</div>`;
   $("hall").innerHTML =
-    col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png") +
-    col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png") +
-    col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png") +
+    col("top-net", "TOP NET", T.net, r => money(r.v, true), "art/icons/treasure.png", "net = cashed + eth claims − fed<br>chain-only, server money invisible") +
+    col("top-hits", "TOP MAZE HITS", T.hits, r => money(r.v), "art/icons/gem.png", "bounty/gem/throne credits<br>≈ ¼ of the server's gem payouts") +
+    col("top-fed", "TOP FED", T.fed, r => money(r.v), "art/icons/corn.png", "keys + top-ups, chain-settled<br>legendary-shop keys at $1 face") +
     // 4th board: the weekly treasure race — treasure is a SCORE, its money = share of the weekly pool
     (SERVER && SERVER.top ? (() => {
       const share = tr => SERVER.poolValor && SERVER.totalTreasure ? (SERVER.poolValor / 100) * (tr / SERVER.totalTreasure) : 0;
       const top = SERVER.top[0];
       return `<div class="hcol top-treasure"><h3><img src="art/icons/worldkey.png" alt="">TOP TREASURE · WK #${SERVER.weekNumber}</h3>` +
         SERVER.top.slice(0, 10).map(r =>
-          `<div class="hrow"><span class="r">${r.rank}</span><span class="a" title="${r.address} · pool share ≈ $${Math.round(share(r.treasure)).toLocaleString("en-US")}">${r.username || short(r.address)}</span><span class="v">${kM(r.treasure)}p</span></div>`).join("") +
-        `<div class="hall-note">treasure = race points · payout = pool × pts/total${top ? " · #1 ≈ $" + Math.round(share(top.treasure)).toLocaleString("en-US") : ""}</div></div>`;
+          `<div class="hrow"><span class="r">${r.rank}</span><span class="a" title="${r.address} · pool share ≈ $${Math.round(share(r.treasure)).toLocaleString("en-US")}">${r.username || short(r.address)}</span><span class="v">${kM(r.treasure)} pts</span></div>`).join("") +
+        `<div class="hall-note">treasure = race points, payout = pool × pts/total${top ? "<br>#1 ≈ $" + Math.round(share(top.treasure)).toLocaleString("en-US") + " pool share" : ""}</div></div>`;
     })() : "");
   const se = HALL.totalsE || {}, at = HALL.totals || {};
   const ageH = HALL.t ? (Date.now() - Date.parse(HALL.t)) / 3600000 : 99;
