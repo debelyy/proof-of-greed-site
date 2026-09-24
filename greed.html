@@ -326,7 +326,7 @@ footer code{font-family:ui-monospace, Consolas, Menlo, 'Courier New', monospace;
         <p><b>Key buys</b> — KeysPurchased logs of both key shops, $1/key at the game's own price; ETH-era legacy shop (0.001 ETH/key) counted at $1 face, the ETH amount shown on the receipt.</p>
         <p><b>VALOR top-ups</b> — deposit logs of the valorVault (USDC in, 100 VALOR = $1 peg).</p>
         <p><b>Cash-outs</b> — withdrawal logs: USDC transferred to you in the same tx, after the game's 5% fee.</p>
-        <p><b>ETH claims (weekly pool + jackpots)</b> — the claim vault's own on-chain events: <b>WeeklyClaimed</b> (your weekly pool share) and <b>JackpotClaimed</b> (bounty hits), real ETH to your wallet since the game's launch (03.02.2026). ~930 ETH paid to 11.5k wallets all-time; matches the game's API within 1%.</p>
+        <p><b>ETH claims (legacy weekly pool + jackpots)</b> — the claim vault's on-chain events: <b>WeeklyClaimed</b> and <b>JackpotClaimed</b>, real ETH to your wallet. Measured by era: 452+242 ETH in the ETH months (Feb-May), 158+71 in May-Aug, then it dies out - the current season has 0.45+0.03 ETH. Today's weekly/bounty payouts go to the server-side claimable VALOR balance and reach the chain only as cash-outs. ~923 ETH all-time, matches the game's API within 1%.</p>
         <p><b>Hits</b> — win-credit logs of the vault (bounty/gem/throne USD credits). Roughly a quarter of the gem value the server pays; the rest is server-side VALOR until cashed out.</p>
       </div>
       <div class="howto-col">
@@ -642,7 +642,7 @@ function drawReceipt(pl) {
   L.push({ k: "stampzone", stamp: v.stamp, color: v.color });
   L.push({ k: "gap", h: 8 });
   L.push({ k: "center", t: M ? "ABSTRACT CHAIN ONLY · NET = CASHED - FED" : "FED = KEYS+TOP-UPS ON ABSTRACT · NET = CASHED-FED · VALOR KEY BUYS INVISIBLE", f: `16px ${TERM}`, c: MUT });
-  L.push({ k: "center", t: M ? "ROBINHOOD/EVE KEYS + RACE VALOR: SERVER-SIDE" : "ROBINHOOD/EVE KEYS + RACE VALOR: SERVER-SIDE - SEEN ONCE CASHED", f: `16px ${TERM}`, c: MUT, dy: 2 });
+  L.push({ k: "center", t: M ? "ROBINHOOD/EVE KEYS + RACE VALOR: SERVER-SIDE" : "ROBINHOOD/EVE KEYS + RACE VALOR + PENDING WEEKLY/BOUNTY PAYOUTS: SERVER-SIDE - SEEN ONCE CASHED", f: `16px ${TERM}`, c: MUT, dy: 2 });
   L.push({ k: "gap", h: 12 });
   L.push({ k: "center", t: "THANK YOU FOR YOUR GREED", f: `15px ${PIX}`, c: INK });
   L.push({ k: "barcode" });
@@ -1136,7 +1136,7 @@ function buildMq() {
     const t = HALL.totals || {}, n = Object.keys(HALL.wallets || {}).length;
     if (n) items.push(n.toLocaleString("en-US") + " WALLETS SEEN IN THE MAZE");
     items.push("LIFETIME: " + kUsd(t.fed || 0) + " FED · " + kUsd(t.cashed || 0) + " CASHED · " + kUsd(t.hits || 0) + " HITS");
-    if (t.eth > 0.01) items.push("ETH CLAIMS " + Math.round(t.eth) + " ETH ON-CHAIN: WEEKLY POOL + JACKPOTS");
+    if (t.eth > 0.01) items.push("LEGACY ETH CLAIMS " + Math.round(t.eth) + " ETH ON-CHAIN (FEB-AUG: WEEKLY+JACKPOT)");
   }
   if (SERVER && SERVER.jackpot) items.push("WEEK #" + SERVER.weekNumber + " POOL " + kUsd(SERVER.poolValor / 100) + " · BOUNTY POOL " + SERVER.jackpot.balanceEth.toFixed(1) + " ETH · THRONE " + kUsd((SERVER.throne || {}).poolValor / 100));
   else if (POOLS && POOLS.weeklyPoolUsd != null) items.push("WEEK #" + POOLS.weekNumber + " POOL " + kUsd(POOLS.weeklyPoolUsd) + " · BOUNTY " + (POOLS.bountyPoolEth || 0).toFixed(1) + " ETH");
@@ -1330,9 +1330,9 @@ async function loadData({ light = false } = {}) {
       const wn = Number(pools.weekNumber);
       const S = SERVER; // the bot's SIWE-authenticated copy of what a logged-in player sees
       const poolCards = [
-        { lbl: "WEEKLY POOL", val: kUsd(S ? S.poolValor / 100 : pools.weeklyPoolUsd), sub: "70% of key money · VALOR 100 = $1 · wk #" + (S ? S.weekNumber : wn) + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "This week's payout pool, straight from the game's own API (our bot signs in with a fan account and copies it). 70% of every key feeds it; it splits by treasure share at Thursday's reset and is claimed on-chain in ETH (WeeklyClaimed)." },
+        { lbl: "WEEKLY POOL", val: kUsd(S ? S.poolValor / 100 : pools.weeklyPoolUsd), sub: "70% of key money · VALOR 100 = $1 · wk #" + (S ? S.weekNumber : wn) + (lw ? " · last wk paid " + kUsd(lw.paidUsd) : ""), ic: "art/icons/corn.png", why: "This week's payout pool, straight from the game's own API (our bot signs in with a fan account and copies it). 70% of every key feeds it; it splits by treasure share at the Thursday reset into your claimable balance - server-side VALOR today, visible on-chain once cashed out through the vault. The game's first months paid this in real ETH via the claim vault (452 ETH, Feb-May); measured on-chain, this season's ETH claims are dust (0.45 ETH)." },
         { lbl: "WEEK RESET IN", val: "…", sub: "Thu 16:00 UTC · playmog weekEnd", ic: "art/icons/evekey.png", vid: "wkReset", why: "Countdown to the playmog weekEnd timestamp (Thursday 16:00 UTC)." },
-        { lbl: "BOUNTY POOL", val: (S ? S.jackpot.balanceEth : (pools.bountyPoolEth || 0)).toFixed(2) + " ETH", sub: "18% of key money · instant payouts on hit" + (S && S.jackpot.totalPaidEth ? " · " + Math.round(S.jackpot.totalPaidEth).toLocaleString("en-US") + " ETH paid all-time" : ""), ic: "art/icons/jackpot.png", why: "The game's Bounty pool ('jackpot' in its API): 18% of key money, pays instantly when a run hits it, settles on-chain through the claim vault (JackpotClaimed - we count those ETH in every receipt). The VALOR face of the same pool: " + kUsd((S ? S.jackpot.poolValor : (pools.bountyPoolUsd || 0) * 100) / 100) + "." },
+        { lbl: "BOUNTY POOL", val: (S ? S.jackpot.balanceEth : (pools.bountyPoolEth || 0)).toFixed(2) + " ETH", sub: "18% of key money · instant payouts on hit" + (S && S.jackpot.totalPaidEth ? " · " + Math.round(S.jackpot.totalPaidEth).toLocaleString("en-US") + " ETH paid all-time" : ""), ic: "art/icons/jackpot.png", why: "The game's Bounty pool ('jackpot' in its API): 18% of key money, pays when a run hits it. The pool is reported at 4.31 ETH; this season's on-chain JackpotClaimed payouts total 0.03 ETH - today hits credit claimable VALOR (visible in receipts once cashed out). Legacy ETH payouts: 313 ETH all-time. VALOR face of the pool: " + kUsd((S ? S.jackpot.poolValor : (pools.bountyPoolUsd || 0) * 100) / 100) + "." },
         { lbl: "THRONE POOL", val: S && S.throne ? kUsd(S.throne.poolValor / 100) : "…", sub: "5% of key money · progressive, pays 80%", ic: "art/icons/throne.png", why: "The Throne: a progressive pool (5% of key money, doesn't reset weekly). A full run clear rolls for it - one winner takes 80%, the rest rolls over. Per the game's own API, read by our signed-in bot." },
       ];
       if (S && S.raffle) poolCards.push({
